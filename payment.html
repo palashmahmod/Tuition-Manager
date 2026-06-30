@@ -46,8 +46,8 @@
     </style>
 </head>
 <body>
-
 <div class="container">
+
     <a href="index.html" id="backLink" class="back-btn">← মূল ড্যাশবোর্ড</a>
     <h2 id="batchTitle">ব্যাচের নাম...</h2>
     <h3>স্টুডেন্টদের বেতন ও মাসিক কালেকশন</h3>
@@ -76,10 +76,10 @@
     </div>
 </div>
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
-  import { getFirestore, collection, getDocs, setDoc, doc } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
 
+<script>
   const firebaseConfig = {
     apiKey: "AIzaSyAquGKYXLOF5ZbHuu5GzenXRcVF_KKm5ag",
     authDomain: "tuition-manager-101c2.firebaseapp.com",
@@ -91,8 +91,9 @@
     measurementId: "G-3BXWLMX1G6"
   };
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+  // ফায়ারবেস ইনিশিয়ালাইজেশন
+  firebase.initializeApp(firebaseConfig);
+  const database = firebase.database();
 
   // URL থেকে ব্যাচের তথ্য নেওয়া
   const urlParams = new URLSearchParams(window.location.search);
@@ -111,90 +112,77 @@
   const currentMonthStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
   paymentMonthInput.value = currentMonthStr;
 
-  // মাস পরিবর্তন করলে নতুন করে ডাটা লোড হবে
+  // মাস পরিবর্তন হলে ইভেন্ট
   paymentMonthInput.addEventListener('change', loadPaymentSheet);
 
-  // পেমেন্ট শিট ও মোট টাকা গণনার মেইন ফাংশন
-  async function loadPaymentSheet() {
+  // পেমেন্ট রেকর্ড লোড এবং টোটাল হিসাব করার ফাংশন
+  function loadPaymentSheet() {
     paymentTableBody.innerHTML = "<tr><td colspan='5'>লোড হচ্ছে...</td></tr>";
     const selectedMonth = paymentMonthInput.value; // YYYY-MM
 
-    // ১. স্টুডেন্টদের তালিকা আনা
-    const studentsSnapshot = await getDocs(collection(db, "batches", batchId, "students"));
-    
-    // ২. নির্বাচিত মাসের পেমেন্ট রেকর্ড আনা
-    const paymentsSnapshot = await getDocs(collection(db, "batches", batchId, "payments"));
-    
-    let monthlyPayments = {};
-    let totalCollected = 0;
-
-    // এই মাসের ডাটাগুলো ফিল্টার করে আলাদা করা
-    paymentsSnapshot.forEach((docSnap) => {
-        if(docSnap.id.startsWith(selectedMonth)) {
-            monthlyPayments[docSnap.id] = docSnap.data(); // docSnap.id হবে 'YYYY-MM-studentId'
-        }
-    });
-
-    paymentTableBody.innerHTML = "";
-
-    if(studentsSnapshot.empty) {
-        paymentTableBody.innerHTML = "<tr><td colspan='5'>এই ব্যাচে কোনো স্টুডেন্ট নেই!</td></tr>";
-        totalMonthlyEarnings.innerText = "0";
-        return;
-    }
-
-    studentsSnapshot.forEach((docSnap) => {
-        const sId = docSnap.id;
-        const s = docSnap.data();
+    // ১. নির্দিষ্ট ব্যাচের স্টুডেন্ট এবং পেমেন্ট নোড একবার রিড করা
+    database.ref(`batches/${batchId}`).once("value", (snapshot) => {
+        paymentTableBody.innerHTML = "";
         
-        // ইউনিক আইডি তৈরি নির্বাচিত মাস ও স্টুডেন্ট আইডির কম্বিনেশনে
-        const paymentDocId = `${selectedMonth}-${sId}`;
-        const record = monthlyPayments[paymentDocId] || { date: `${selectedMonth}-10`, amount: 0 };
+        if (!snapshot.hasChild("students")) {
+            paymentTableBody.innerHTML = "<tr><td colspan='5'>এই ব্যাচে কোনো স্টুডেন্ট নেই!</td></tr>";
+            totalMonthlyEarnings.innerText = "0";
+            return;
+        }
 
-        // মোট আদায় স্বয়ংক্রিয়ভাবে যোগ করা (৫ নম্বর শর্ত)
-        totalCollected += parseInt(record.amount || 0);
+        const studentsData = snapshot.child("students").val();
+        const paymentsData = snapshot.child("payments").val() || {};
 
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td>${s.roll}</td>
-            <td><b>${s.name}</b></td>
-            <td><input type="date" id="date_${sId}" value="${record.date}"></td>
-            <td><input type="number" id="amount_${sId}" value="${record.amount}" placeholder="টাকা" style="width:100px;"></td>
-            <td><button class="btn-save" data-sid="${sId}">সংরক্ষণ</button></td>
-        `;
-        paymentTableBody.appendChild(tr);
-    });
+        let totalCollected = 0;
 
-    // মোট টাকা স্ক্রিনে দেখানো
-    totalMonthlyEarnings.innerText = totalCollected;
-
-    // সংরক্ষণ বাটনে ক্লিক লজিক যুক্ত করা
-    document.querySelectorAll('.btn-save').forEach(btn => {
-        btn.addEventListener('click', async (e) => {
-            const sId = e.target.getAttribute('data-sid');
-            const pDate = document.getElementById(`date_${sId}`).value;
-            const pAmount = document.getElementById(`amount_${sId}`).value;
-
-            if(!pDate || pAmount === "") {
-                alert("দয়া করে তারিখ ও টাকার পরিমাণ সঠিক দিন!");
-                return;
-            }
-
-            const paymentDocId = `${selectedMonth}-${sId}`;
+        // ২. প্রতিটি স্টুডেন্টের জন্য রো (Row) তৈরি করা
+        for (const sId in studentsData) {
+            const s = studentsData[sId];
             
-            try {
-                // ফায়ারবেসের 'payments' কালেকশনে সংরক্ষণ
-                await setDoc(doc(db, "batches", batchId, "payments", paymentDocId), {
-                    date: pDate,
-                    amount: parseInt(pAmount)
-                });
-                alert("বেতনের তথ্য সফলভাবে সংরক্ষিত হয়েছে!");
-                loadPaymentSheet(); // মোট টাকা রিফ্রেশ করার জন্য পুনরায় লোড
-            } catch (error) {
-                console.error("Error saving payment: ", error);
-            }
-        });
+            // নির্বাচিত মাস ও স্টুডেন্ট আইডির কম্বিনেশনে ইউনিক আইডি ট্র্যাকিং
+            const paymentDocId = `${selectedMonth}-${sId}`;
+            const record = paymentsData[paymentDocId] || { date: `${selectedMonth}-10`, amount: 0 };
+
+            totalCollected += parseInt(record.amount || 0);
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${s.roll}</td>
+                <td><b>${s.name}</b></td>
+                <td><input type="date" id="date_${sId}" value="${record.date}"></td>
+                <td><input type="number" id="amount_${sId}" value="${record.amount}" placeholder="টাকা" style="width:100px;"></td>
+                <td><button class="btn-save" onclick="savePayment('${sId}')">সংরক্ষণ</button></td>
+            `;
+            paymentTableBody.appendChild(tr);
+        }
+
+        // মোট কালেকশন প্রদর্শন
+        totalMonthlyEarnings.innerText = totalCollected;
     });
+  }
+
+  // ৩. সিঙ্গেল স্টুডেন্ট পেমেন্ট ডাটাবেজে সেভ করা
+  window.savePayment = function(sId) {
+      const selectedMonth = paymentMonthInput.value;
+      const pDate = document.getElementById(`date_${sId}`).value;
+      const pAmount = document.getElementById(`amount_${sId}`).value;
+
+      if(!pDate || pAmount === "" || parseInt(pAmount) < 0) {
+          alert("দয়া করে তারিখ ও টাকার পরিমাণ সঠিক দিন!");
+          return;
+      }
+
+      const paymentDocId = `${selectedMonth}-${sId}`;
+
+      database.ref(`batches/${batchId}/payments/${paymentDocId}`).set({
+          date: pDate,
+          amount: parseInt(pAmount)
+      }).then(() => {
+          alert("বেতনের তথ্য সফলভাবে সংরক্ষিত হয়েছে!");
+          loadPaymentSheet(); // টোটাল রিকালকুলেট করার জন্য রিফ্রেশ
+      }).catch((error) => {
+          alert("ত্রুটি: " + error.message);
+      });
   }
 
   // পেজ ওপেন হওয়ামাত্রই রান হবে
