@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>বেতন ও কালেকশন রেকর্ড</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 20px;
+            direction: ltr;
+        }
+        .container {
+            max-width: 850px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        h2, h3 { text-align: center; color: #333; }
+        .back-btn {
+            background-color: #6c757d; color: white; padding: 8px 12px;
+            text-decoration: none; border-radius: 4px; display: inline-block; margin-bottom: 20px;
+        }
+        .filter-box {
+            background: #e9ecef; padding: 15px; border-radius: 6px;
+            display: flex; gap: 15px; justify-content: center; align-items: center; margin-bottom: 20px;
+        }
+        input[type="month"], input[type="date"], input[type="number"] { padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-size: 16px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #dee2e6; padding: 10px; text-align: center; }
+        th { background-color: #f1f3f5; }
+        .total-box {
+            background-color: #d1ecf1; color: #0c5460; padding: 15px;
+            border-radius: 6px; font-size: 18px; font-weight: bold;
+            text-align: right; margin-top: 20px; border: 1px solid #bee5eb;
+        }
+        .btn-save {
+            background-color: #007bff; color: white; border: none;
+            padding: 6px 12px; border-radius: 4px; cursor: pointer;
+        }
+        .btn-save:hover { background-color: #0069d9; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <a href="index.html" id="backLink" class="back-btn">← মূল ড্যাশবোর্ড</a>
+    <h2 id="batchTitle">ব্যাচের নাম...</h2>
+    <h3>স্টুডেন্টদের বেতন ও মাসিক কালেকশন</h3>
+
+    <div class="filter-box">
+        <label for="paymentMonth"><b>মাস ও বছর নির্বাচন করুন:</b></label>
+        <input type="month" id="paymentMonth">
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>রোল</th>
+                <th>স্টুডেন্টের নাম</th>
+                <th>আদায়ের তারিখ</th>
+                <th>টাকার পরিমাণ (টাকা)</th>
+                <th>অ্যাকশন</th>
+            </tr>
+        </thead>
+        <tbody id="paymentTableBody">
+            </tbody>
+    </table>
+
+    <div class="total-box">
+        এই মাসে এই ব্যাচ থেকে মোট আদায়: <span id="totalMonthlyEarnings">0</span> টাকা
+    </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
+  import { getFirestore, collection, getDocs, setDoc, doc } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAquGKYXLOF5ZbHuu5GzenXRcVF_KKm5ag",
+    authDomain: "tuition-manager-101c2.firebaseapp.com",
+    databaseURL: "https://tuition-manager-101c2-default-rtdb.firebaseio.com",
+    projectId: "tuition-manager-101c2",
+    storageBucket: "tuition-manager-101c2.firebasestorage.app",
+    messagingSenderId: "532051589045",
+    appId: "1:532051589045:web:a7670048df0f5657ea8bfc",
+    measurementId: "G-3BXWLMX1G6"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // URL থেকে ব্যাচের তথ্য নেওয়া
+  const urlParams = new URLSearchParams(window.location.search);
+  const batchId = urlParams.get('batchId');
+  const batchName = urlParams.get('batchName');
+
+  document.getElementById('batchTitle').innerText = "ব্যাচ: " + batchName;
+  document.getElementById('backLink').href = `batch.html?id=${batchId}&name=${encodeURIComponent(batchName)}`;
+
+  const paymentMonthInput = document.getElementById('paymentMonth');
+  const paymentTableBody = document.getElementById('paymentTableBody');
+  const totalMonthlyEarnings = document.getElementById('totalMonthlyEarnings');
+
+  // চলতি মাস ও বছর ডিফল্ট সেট করা (Format: YYYY-MM)
+  const today = new Date();
+  const currentMonthStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+  paymentMonthInput.value = currentMonthStr;
+
+  // মাস পরিবর্তন করলে নতুন করে ডাটা লোড হবে
+  paymentMonthInput.addEventListener('change', loadPaymentSheet);
+
+  // পেমেন্ট শিট ও মোট টাকা গণনার মেইন ফাংশন
+  async function loadPaymentSheet() {
+    paymentTableBody.innerHTML = "<tr><td colspan='5'>লোড হচ্ছে...</td></tr>";
+    const selectedMonth = paymentMonthInput.value; // YYYY-MM
+
+    // ১. স্টুডেন্টদের তালিকা আনা
+    const studentsSnapshot = await getDocs(collection(db, "batches", batchId, "students"));
+    
+    // ২. নির্বাচিত মাসের পেমেন্ট রেকর্ড আনা
+    const paymentsSnapshot = await getDocs(collection(db, "batches", batchId, "payments"));
+    
+    let monthlyPayments = {};
+    let totalCollected = 0;
+
+    // এই মাসের ডাটাগুলো ফিল্টার করে আলাদা করা
+    paymentsSnapshot.forEach((docSnap) => {
+        if(docSnap.id.startsWith(selectedMonth)) {
+            monthlyPayments[docSnap.id] = docSnap.data(); // docSnap.id হবে 'YYYY-MM-studentId'
+        }
+    });
+
+    paymentTableBody.innerHTML = "";
+
+    if(studentsSnapshot.empty) {
+        paymentTableBody.innerHTML = "<tr><td colspan='5'>এই ব্যাচে কোনো স্টুডেন্ট নেই!</td></tr>";
+        totalMonthlyEarnings.innerText = "0";
+        return;
+    }
+
+    studentsSnapshot.forEach((docSnap) => {
+        const sId = docSnap.id;
+        const s = docSnap.data();
+        
+        // ইউনিক আইডি তৈরি নির্বাচিত মাস ও স্টুডেন্ট আইডির কম্বিনেশনে
+        const paymentDocId = `${selectedMonth}-${sId}`;
+        const record = monthlyPayments[paymentDocId] || { date: `${selectedMonth}-10`, amount: 0 };
+
+        // মোট আদায় স্বয়ংক্রিয়ভাবে যোগ করা (৫ নম্বর শর্ত)
+        totalCollected += parseInt(record.amount || 0);
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${s.roll}</td>
+            <td><b>${s.name}</b></td>
+            <td><input type="date" id="date_${sId}" value="${record.date}"></td>
+            <td><input type="number" id="amount_${sId}" value="${record.amount}" placeholder="টাকা" style="width:100px;"></td>
+            <td><button class="btn-save" data-sid="${sId}">সংরক্ষণ</button></td>
+        `;
+        paymentTableBody.appendChild(tr);
+    });
+
+    // মোট টাকা স্ক্রিনে দেখানো
+    totalMonthlyEarnings.innerText = totalCollected;
+
+    // সংরক্ষণ বাটনে ক্লিক লজিক যুক্ত করা
+    document.querySelectorAll('.btn-save').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            const sId = e.target.getAttribute('data-sid');
+            const pDate = document.getElementById(`date_${sId}`).value;
+            const pAmount = document.getElementById(`amount_${sId}`).value;
+
+            if(!pDate || pAmount === "") {
+                alert("দয়া করে তারিখ ও টাকার পরিমাণ সঠিক দিন!");
+                return;
+            }
+
+            const paymentDocId = `${selectedMonth}-${sId}`;
+            
+            try {
+                // ফায়ারবেসের 'payments' কালেকশনে সংরক্ষণ
+                await setDoc(doc(db, "batches", batchId, "payments", paymentDocId), {
+                    date: pDate,
+                    amount: parseInt(pAmount)
+                });
+                alert("বেতনের তথ্য সফলভাবে সংরক্ষিত হয়েছে!");
+                loadPaymentSheet(); // মোট টাকা রিফ্রেশ করার জন্য পুনরায় লোড
+            } catch (error) {
+                console.error("Error saving payment: ", error);
+            }
+        });
+    });
+  }
+
+  // পেজ ওপেন হওয়ামাত্রই রান হবে
+  loadPaymentSheet();
+</script>
+</body>
+</html>
