@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ব্যাচ ম্যানেজমেন্ট</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 20px;
+            direction: ltr;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        h2, h3 {
+            color: #333;
+            text-align: center;
+        }
+        .back-btn {
+            background-color: #6c757d;
+            color: white;
+            padding: 8px 12px;
+            text-decoration: none;
+            border-radius: 4px;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+        .form-box {
+            background: #f8f9fa;
+            padding: 15px;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        input {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .full-width {
+            grid-column: span 2;
+        }
+        button {
+            padding: 10px;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 15px;
+        }
+        .btn-success { background-color: #28a745; }
+        .btn-success:hover { background-color: #218838; }
+        .btn-primary { background-color: #007bff; }
+        .btn-danger { background-color: #dc3545; }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            text-align: center;
+        }
+        th { background-color: #e9ecef; }
+        .action-btns button {
+            padding: 5px 8px;
+            font-size: 12px;
+            margin: 2px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <a href="index.html" class="back-btn">← মূল ড্যাশবোর্ড</a>
+    <h2 id="batchTitle">ব্যাচের নাম লোড হচ্ছে...</h2>
+    <div style="text-align: center; margin-bottom: 20px;">
+    <button id="goToAttendanceBtn" class="btn-primary" style="padding: 10px 20px; font-size: 16px; margin-right: 10px;">📅 দৈনিক হাজিরা ও রিপোর্ট</button>
+    <button id="goToPaymentBtn" class="btn-primary" style="padding: 10px 20px; font-size: 16px; background-color: #17a2b8;">৳ বেতন ও মাসিক কালেকশন</button>
+</div>
+    <div class="form-box">
+        <h3 id="formTitle">নতুন স্টুডেন্ট যোগ করুন</h3>
+        <input type="hidden" id="studentId"> <div class="form-grid">
+            <input type="text" id="stuName" placeholder="স্টুডেন্টের নাম" required>
+            <input type="text" id="stuClass" placeholder="শ্রেণি" required>
+            <input type="text" id="stuSection" placeholder="শাখা (Section)">
+            <input type="number" id="stuRoll" placeholder="রোল নম্বর" required>
+            <input type="date" id="stuJoinDate" class="full-width" title="যোগদানের তারিখ" required>
+        </div>
+        <button id="saveStudentBtn" class="btn-success full-width" style="width: 100%;">সংরক্ষণ করুন</button>
+    </div>
+
+    <h3>স্টুডেন্ট তালিকা</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>রোল</th>
+                <th>নাম</th>
+                <th>শ্রেণি (শাখা)</th>
+                <th>যোগদানের তারিখ</th>
+                <th>অ্যাকশন</th>
+            </tr>
+        </thead>
+        <tbody id="studentTableBody">
+            </tbody>
+    </table>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
+  import { getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAquGKYXLOF5ZbHuu5GzenXRcVF_KKm5ag",
+    authDomain: "tuition-manager-101c2.firebaseapp.com",
+    databaseURL: "https://tuition-manager-101c2-default-rtdb.firebaseio.com",
+    projectId: "tuition-manager-101c2",
+    storageBucket: "tuition-manager-101c2.firebasestorage.app",
+    messagingSenderId: "532051589045",
+    appId: "1:532051589045:web:a7670048df0f5657ea8bfc",
+    measurementId: "G-3BXWLMX1G6"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // URL থেকে Batch ID এবং Name খুঁজে বের করা
+  const urlParams = new URLSearchParams(window.location.search);
+  const batchId = urlParams.get('id');
+  const batchName = urlParams.get('name');
+
+  if(!batchId) {
+      alert("কোনো ব্যাচ সিলেক্ট করা হয়নি!");
+      window.location.href = "index.html";
+  }
+
+  document.getElementById('batchTitle').innerText = "ব্যাচ: " + batchName;
+document.getElementById('goToAttendanceBtn').addEventListener('click', () => {
+    window.location.href = `attendance.html?batchId=${batchId}&batchName=${encodeURIComponent(batchName)}`;
+});
+
+document.getElementById('goToPaymentBtn').addEventListener('click', () => {
+    window.location.href = `payment.html?batchId=${batchId}&batchName=${encodeURIComponent(batchName)}`;
+});
+  // DOM Elements
+  const studentTableBody = document.getElementById('studentTableBody');
+  const saveStudentBtn = document.getElementById('saveStudentBtn');
+  const studentIdInput = document.getElementById('studentId');
+  const formTitle = document.getElementById('formTitle');
+  
+  const stuName = document.getElementById('stuName');
+  const stuClass = document.getElementById('stuClass');
+  const stuSection = document.getElementById('stuSection');
+  const stuRoll = document.getElementById('stuRoll');
+  const stuJoinDate = document.getElementById('stuJoinDate');
+
+  // ১. নির্দিষ্ট ব্যাচের স্টুডেন্টদের তালিকা লোড করা
+  async function loadStudents() {
+    studentTableBody.innerHTML = "<tr><td colspan='5'>লোড হচ্ছে...</td></tr>";
+    
+    // সাব-কালেকশন 'students' থেকে ডাটা আনা হচ্ছে
+    const querySnapshot = await getDocs(collection(db, "batches", batchId, "students"));
+    studentTableBody.innerHTML = "";
+    
+    querySnapshot.forEach((docSnap) => {
+      const s = docSnap.data();
+      const sId = docSnap.id;
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${s.roll}</td>
+        <td>${s.name}</td>
+        <td>${s.class} (${s.section || 'N/A'})</td>
+        <td>${s.joinDate}</td>
+        <td class="action-btns">
+            <button class="btn-primary edit-btn" data-id="${sId}">ইডিট</button>
+            <button class="btn-danger delete-btn" data-id="${sId}">ডিলিট</button>
+        </td>
+      `;
+      studentTableBody.appendChild(tr);
+    });
+
+    // ইডিট ও ডিলিট বাটনে ইভেন্ট লিসেনার দেওয়া
+    addTableButtonListeners();
+  }
+
+  // ২. নতুন স্টুডেন্ট যোগ বা পুরাতন স্টুডেন্ট এডিট (Save/Update) করা
+  saveStudentBtn.addEventListener('click', async () => {
+    const name = stuName.value.trim();
+    const sClass = stuClass.value.trim();
+    const section = stuSection.value.trim();
+    const roll = stuRoll.value.trim();
+    const joinDate = stuJoinDate.value;
+    const id = studentIdInput.value; // এডিট মোডে থাকলে আইডি থাকবে
+
+    if(!name || !sClass || !roll || !joinDate) {
+        alert("দয়া করে সবকটি ঘর পূরণ করুন!");
+        return;
+    }
+
+    const studentData = { name, class: sClass, section, roll: parseInt(roll), joinDate };
+
+    if(id === "") {
+        // নতুন স্টুডেন্ট যোগ (Create)
+        await addDoc(collection(db, "batches", batchId, "students"), studentData);
+        alert("স্টুডেন্ট সফলভাবে যোগ হয়েছে!");
+    } else {
+        // পুরাতন স্টুডেন্ট আপডেট (Update)
+        await updateDoc(doc(db, "batches", batchId, "students", id), studentData);
+        alert("স্টুডেন্ট তথ্য আপডেট হয়েছে!");
+        // ফর্ম আগের জায়গায় ফিরিয়ে নেওয়া
+        formTitle.innerText = "নতুন স্টুডেন্ট যোগ করুন";
+        saveStudentBtn.innerText = "সংরক্ষণ করুন";
+        studentIdInput.value = "";
+    }
+
+    resetForm();
+    loadStudents();
+  });
+
+  // টেবিলের বাটনগুলোর কাজ (Edit & Delete)
+  function addTableButtonListeners() {
+      // ডিলিট লজিক
+      document.querySelectorAll('.delete-btn').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+              const sId = e.target.getAttribute('data-id');
+              if(confirm("আপনি কি নিশ্চিতভাবে এই স্টুডেন্টকে ডিলিট করতে চান?")) {
+                  await deleteDoc(doc(db, "batches", batchId, "students", sId));
+                  loadStudents();
+              }
+          });
+      });
+
+      // ইডিট লজিক (ফর্ম ফিল্ডে ডাটা ফেরত আনা)
+      document.querySelectorAll('.edit-btn').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+              const sId = e.target.getAttribute('data-id');
+              const docSnap = await getDoc(doc(db, "batches", batchId, "students", sId));
+              if(docSnap.exists()) {
+                  const s = docSnap.data();
+                  
+                  // ফর্মে ডাটা বসানো
+                  studentIdInput.value = sId;
+                  stuName.value = s.name;
+                  stuClass.value = s.class;
+                  stuSection.value = s.section;
+                  stuRoll.value = s.roll;
+                  stuJoinDate.value = s.joinDate;
+
+                  formTitle.innerText = "স্টুডেন্ট তথ্য সংশোধন (Edit)";
+                  saveStudentBtn.innerText = "আপডেট করুন";
+              }
+          });
+      });
+  }
+
+  function resetForm() {
+      stuName.value = ""; stuClass.value = ""; stuSection.value = ""; stuRoll.value = ""; stuJoinDate.value = "";
+  }
+
+  // পেজ লোড হলে স্টুডেন্ট লিস্ট দেখাবে
+  loadStudents();
+</script>
+</body>
+</html>
