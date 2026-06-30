@@ -43,8 +43,8 @@
     </style>
 </head>
 <body>
-
 <div class="container">
+
     <a href="index.html" id="backLink" class="back-btn">← মূল ড্যাশবোর্ড</a>
     <h2 id="batchTitle">ব্যাচের নাম...</h2>
     <h3>প্রতিদিনের হাজিরা ও মাসিক রিপোর্ট</h3>
@@ -68,14 +68,13 @@
         <tbody id="attendanceTableBody">
             </tbody>
     </table>
-
     <button id="saveAttendanceBtn" class="btn-submit">আজকের হাজিরা সংরক্ষণ করুন</button>
 </div>
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
-  import { getFirestore, collection, getDocs, setDoc, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
 
+<script>
   const firebaseConfig = {
     apiKey: "AIzaSyAquGKYXLOF5ZbHuu5GzenXRcVF_KKm5ag",
     authDomain: "tuition-manager-101c2.firebaseapp.com",
@@ -87,8 +86,9 @@
     measurementId: "G-3BXWLMX1G6"
   };
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+  // ফায়ারবেস ইনিশিয়ালাইজেশন
+  firebase.initializeApp(firebaseConfig);
+  const database = firebase.database();
 
   // URL থেকে ব্যাচের তথ্য নেওয়া
   const urlParams = new URLSearchParams(window.location.search);
@@ -103,125 +103,115 @@
   const attendanceTableBody = document.getElementById('attendanceTableBody');
   const saveAttendanceBtn = document.getElementById('saveAttendanceBtn');
 
-  // আজকের তারিখ ডিফল্ট হিসেবে সেট করা
+  // আজকের তারিখ ডিফল্ট সেট করা
   const today = new Date();
   const year = today.getFullYear();
   const month = String(today.getMonth() + 1).padStart(2, '0');
   const day = String(today.getDate()).padStart(2, '0');
   attDateInput.value = `${year}-${month}-${day}`;
 
-  // বার প্রদর্শন করার ফাংশন (বাংলায়)
+  // বাংলায় বার প্রদর্শন করার ফাংশন
   function updateDayName(dateString) {
       const days = ['রবিবার', 'সোমবার', 'মঙ্গলবার', 'বুধবার', 'বৃহস্পতিবার', 'শুক্রবার', 'শনিবার'];
       const d = new Date(dateString);
       dayNameSpan.innerText = `(${days[d.getDay()]})`;
   }
+
   updateDayName(attDateInput.value);
 
-  // তারিখ পরিবর্তন করলে বার আপডেট হবে এবং ওই দিনের ডাটা থাকলে তা লোড হবে
+  // তারিখ পরিবর্তন ইভেন্ট
   attDateInput.addEventListener('change', () => {
       updateDayName(attDateInput.value);
       loadAttendanceSheets();
   });
 
-  // স্টুডেন্ট লিস্ট এবং তাদের মাসিক উপস্থিতির হিসাব স্বয়ংক্রিয়ভাবে লোড করার ফাংশন
-  async function loadAttendanceSheets() {
+  // স্টুডেন্ট লিস্ট এবং রিপোর্ট লোড করার মেইন ফাংশন
+  function loadAttendanceSheets() {
     attendanceTableBody.innerHTML = "<tr><td colspan='5'>লোড হচ্ছে...</td></tr>";
     
     const selectedDate = attDateInput.value; // YYYY-MM-DD
-    const selectedMonth = selectedDate.substring(0, 7); // YYYY-MM (মাস ও বছর ফিল্টারের জন্য)
+    const selectedMonth = selectedDate.substring(0, 7); // YYYY-MM
 
-    // ১. প্রথমে এই ব্যাচের সব স্টুডেন্ট নিয়ে আসা
-    const studentsSnapshot = await getDocs(collection(db, "batches", batchId, "students"));
-    
-    // ২. আজকের দিনে আগে থেকেই কোনো হাজিরা দেওয়া আছে কিনা তা চেক করা
-    const attendanceSnapshot = await getDocs(collection(db, "batches", batchId, "attendance"));
-    let todayAttendance = {};
-    let monthlyStats = {}; // { studentId: { totalDays: 0, presentDays: 0 } }
-
-    // ৩. পুরো মাসের হাজিরা হিসাব (অটোমেটিক রিপোর্ট ক্যালকুলেশন)
-    attendanceSnapshot.forEach((docSnap) => {
-        const attData = docSnap.data();
-        const attDate = docSnap.id; // ডক আইডি-ই হলো তারিখ
-
-        if (attDate === selectedDate) {
-            todayAttendance = attData; // আজকের হাজিরার রেকর্ড মিলল
+    // ১. স্টুডেন্টদের তালিকা ও উপস্থিতির রেকর্ড রিয়েলটাইম রিড করা
+    database.ref(`batches/${batchId}`).once("value", (snapshot) => {
+        attendanceTableBody.innerHTML = "";
+        
+        if (!snapshot.hasChild("students")) {
+            attendanceTableBody.innerHTML = "<tr><td colspan='5'>এই ব্যাচে কোনো স্টুডেন্ট নেই!</td></tr>";
+            return;
         }
 
-        // যদি হাজিরার তারিখটি আমাদের সিলেক্ট করা মাস ও বছরের সাথে মিলে যায়
-        if (attDate.startsWith(selectedMonth)) {
-            for (const sId in attData) {
-                if (!monthlyStats[sId]) {
-                    monthlyStats[sId] = { totalDays: 0, presentDays: 0 };
-                }
-                monthlyStats[sId].totalDays += 1; // মোট কার্যদিবস বৃদ্ধি
-                if (attData[sId] === "Present") {
-                    monthlyStats[sId].presentDays += 1; // মোট উপস্থিতি বৃদ্ধি
+        const studentsData = snapshot.child("students").val();
+        const attendanceData = snapshot.child("attendance").val() || {};
+
+        let todayAttendance = attendanceData[selectedDate] || {};
+        let monthlyStats = {};
+
+        // ২. এই মাসের মোট কার্যদিবস ও মোট উপস্থিতির রিপোর্ট তৈরি
+        for (const attDate in attendanceData) {
+            if (attDate.startsWith(selectedMonth)) {
+                const dayRecord = attendanceData[attDate];
+                for (const sId in dayRecord) {
+                    if (!monthlyStats[sId]) {
+                        monthlyStats[sId] = { totalDays: 0, presentDays: 0 };
+                    }
+                    monthlyStats[sId].totalDays += 1;
+                    if (dayRecord[sId] === "Present") {
+                        monthlyStats[sId].presentDays += 1;
+                    }
                 }
             }
         }
-    });
 
-    attendanceTableBody.innerHTML = "";
+        // ৩. টেবিল ভিউ তৈরি করা
+        for (const sId in studentsData) {
+            const s = studentsData[sId];
+            const stats = monthlyStats[sId] || { totalDays: 0, presentDays: 0 };
+            const currentStatus = todayAttendance[sId] || "Present";
 
-    if(studentsSnapshot.empty) {
-        attendanceTableBody.innerHTML = "<tr><td colspan='5'>এই ব্যাচে কোনো স্টুডেন্ট নেই!</td></tr>";
-        return;
-    }
-
-    studentsSnapshot.forEach((docSnap) => {
-      const s = docSnap.data();
-      const sId = docSnap.id;
-
-      // যদি এই মাসে কোনো স্টুডেন্টের হিসাব না থাকে তবে ডিফল্ট ০
-      const stats = monthlyStats[sId] || { totalDays: 0, presentDays: 0 };
-      
-      // আজকের দিনে স্টুডেন্টটি আগে থেকে প্রেজেন্ট নাকি অ্যাবসেন্ট ছিল তা নির্ধারণ
-      const currentStatus = todayAttendance[sId] || "Present"; 
-
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${s.roll}</td>
-        <td><b>${s.name}</b></td>
-        <td>
-            <div class="radio-group">
-                <label><input type="radio" name="status_${sId}" value="Present" ${currentStatus === "Present" ? "checked" : ""}> উপস্থিত</label>
-                <label><input type="radio" name="status_${sId}" value="Absent" ${currentStatus === "Absent" ? "checked" : ""}> অনুপস্থিত</label>
-            </div>
-        </td>
-        <td class="stats">${stats.totalDays} দিন</td>
-        <td class="stats" style="color: #28a745;">${stats.presentDays} দিন</td>
-      `;
-      attendanceTableBody.appendChild(tr);
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${s.roll}</td>
+                <td><b>${s.name}</b></td>
+                <td>
+                    <div class="radio-group">
+                        <label><input type="radio" name="status_${sId}" value="Present" ${currentStatus === "Present" ? "checked" : ""}> উপস্থিত</label>
+                        <label><input type="radio" name="status_${sId}" value="Absent" ${currentStatus === "Absent" ? "checked" : ""}> অনুপস্থিত</label>
+                    </div>
+                </td>
+                <td class="stats">${stats.totalDays} দিন</td>
+                <td class="stats" style="color: #28a745;">${stats.presentDays} day</td>
+            `;
+            attendanceTableBody.appendChild(tr);
+        }
     });
   }
 
-  // হাজিরা ডাটাবেজে সেভ করার ফাংশন
-  saveAttendanceBtn.addEventListener('click', async () => {
+  // ৪. ডাটাবেজে হাজিরা সংরক্ষণ
+  saveAttendanceBtn.addEventListener('click', () => {
       const selectedDate = attDateInput.value;
-      const studentsSnapshot = await getDocs(collection(db, "batches", batchId, "students"));
       
-      let attendanceData = {};
-      
-      studentsSnapshot.forEach((docSnap) => {
-          const sId = docSnap.id;
-          const status = document.querySelector(`input[name="status_${sId}"]:checked`).value;
-          attendanceData[sId] = status;
-      });
+      database.ref(`batches/${batchId}/students`).once("value", (snapshot) => {
+          if(!snapshot.exists()) return;
 
-      try {
-          // 'attendance' কালেকশনে তারিখকে Document ID বানিয়ে ডাটা সেভ করা হচ্ছে
-          await setDoc(doc(db, "batches", batchId, "attendance", selectedDate), attendanceData);
-          alert("আজকের হাজিরা সফলভাবে ডাটাবেজে সংরক্ষিত হয়েছে!");
-          loadAttendanceSheets(); // স্ক্রিন রিফ্রেশ করে নতুন অটো-হিসাব দেখানো
-      } catch (error) {
-          console.error("Error saving attendance: ", error);
-      }
+          let attendanceData = {};
+          snapshot.forEach((childSnapshot) => {
+              const sId = childSnapshot.key;
+              const radioInput = document.querySelector(`input[name="status_${sId}"]:checked`);
+              attendanceData[sId] = radioInput ? radioInput.value : "Present";
+          });
+
+          database.ref(`batches/${batchId}/attendance/${selectedDate}`).set(attendanceData).then(() => {
+              alert("আজকের হাজিরা সফলভাবে ডাটাবেজে সংরক্ষিত হয়েছে!");
+              loadAttendanceSheets(); // স্ক্রিন রিফ্রেশ করে নতুন ক্যালকুলেশন দেখানো
+          }).catch((error) => {
+              alert("ত্রুটি: " + error.message);
+          });
+      });
   });
 
-  // পেজ চালু হওয়ামাত্রই শিট লোড হবে
+  // পেজ ওপেন হওয়ামাত্রই রান হবে
   loadAttendanceSheets();
-
 </script>
 </body>
 </html>
