@@ -2,99 +2,179 @@
 <html lang="bn">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ব্যাচ ম্যানেজমেন্ট</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f7f6;
+        * {
+            box-sizing: border-box;
             margin: 0;
-            padding: 20px;
-            direction: ltr;
+            padding: 0;
+        }
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            min-height: 100vh;
+            padding: 15px;
+            color: #333;
         }
         .container {
-            max-width: 800px;
+            max-width: 650px;
             margin: 0 auto;
-            background: white;
+            background: #ffffff;
             padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-        h2, h3 {
-            color: #333;
-            text-align: center;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
         }
         .back-btn {
             background-color: #6c757d;
             color: white;
-            padding: 8px 12px;
+            padding: 8px 14px;
             text-decoration: none;
-            border-radius: 4px;
+            border-radius: 8px;
             display: inline-block;
             margin-bottom: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            transition: background 0.2s;
         }
+        .back-btn:hover { background-color: #5a6268; }
+        
+        h2 {
+            text-align: center;
+            color: #2c3e50;
+            font-size: 20px;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+        h3 {
+            color: #2c3e50;
+            font-size: 16px;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+        
+        .nav-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+        .nav-buttons button {
+            padding: 12px 8px;
+            font-size: 14px;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            color: white;
+            transition: all 0.2s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        .btn-attendance { background: #3498db; }
+        .btn-attendance:hover { background: #2980b9; }
+        .btn-payment { background: #17a2b8; }
+        .btn-payment:hover { background: #138496; }
+        
         .form-box {
-            background: #f8f9fa;
+            background: #f8fafc;
             padding: 15px;
-            border: 1px solid #dee2e6;
-            border-radius: 6px;
-            margin-bottom: 20px;
+            border: 1px solid #edf2f7;
+            border-radius: 12px;
+            margin-bottom: 25px;
         }
         .form-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 10px;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
+        }
+        @media (max-width: 480px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            .full-width-mobile {
+                grid-column: span 1 !important;
+            }
         }
         input {
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #cbd5e1;
+            border-radius: 8px;
             font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+            background: #ffffff;
         }
-        .full-width {
-            grid-column: span 2;
-        }
-        button {
-            padding: 10px;
+        input:focus { border-color: #3498db; }
+        .full-width { grid-column: span 2; }
+        
+        button.btn-submit {
+            width: 100%;
+            padding: 12px;
             color: white;
+            background: #2ecc71;
             border: none;
-            border-radius: 4px;
+            border-radius: 8px;
             cursor: pointer;
             font-size: 15px;
+            font-weight: 600;
+            box-shadow: 0 4px 6px rgba(46, 204, 113, 0.15);
         }
-        .btn-success { background-color: #28a745; }
-        .btn-success:hover { background-color: #218838; }
-        .btn-primary { background-color: #007bff; }
-        .btn-danger { background-color: #dc3545; }
+        button.btn-submit:hover { background: #27ae60; }
         
+        /* টেবিল ওভারফ্লো প্রোটেকশন */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            background: #ffffff;
+            -webkit-overflow-scrolling: touch;
+        }
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 15px;
+            min-width: 500px; /* মোবাইলের ভিতরে মিনিমাম চওড়া ধরে রাখবে স্ক্রোল করার জন্য */
         }
         th, td {
-            border: 1px solid #dee2e6;
-            padding: 10px;
+            padding: 10px 8px;
+            font-size: 13px;
             text-align: center;
+            border-bottom: 1px solid #edf2f7;
         }
-        th { background-color: #e9ecef; }
+        th {
+            background-color: #f1f5f9;
+            color: #475569;
+            font-weight: 600;
+        }
+        tr:last-child td { border-bottom: none; }
+        
         .action-btns button {
-            padding: 5px 8px;
-            font-size: 12px;
+            padding: 5px 10px;
+            font-size: 11px;
+            font-weight: 600;
             margin: 2px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            color: white;
         }
+        .btn-edit { background-color: #ffc107; color: #212529 !important; }
+        .btn-edit:hover { background-color: #e0a800; }
+        .btn-delete { background-color: #dc3545; }
+        .btn-delete:hover { background-color: #c82333; }
     </style>
 </head>
 <body>
-<div class="container">
 
+<div class="container">
     <a href="index.html" class="back-btn">← মূল ড্যাশবোর্ড</a>
     <h2 id="batchTitle">ব্যাচের নাম লোড হচ্ছে...</h2>
-
-    <div style="text-align: center; margin-bottom: 20px;">
-        <button id="goToAttendanceBtn" class="btn-primary" style="padding: 10px 20px; font-size: 16px; margin-right: 10px;">📅 দৈনিক হাজিরা ও রিপোর্ট</button>
-        <button id="goToPaymentBtn" class="btn-primary" style="padding: 10px 20px; font-size: 16px; background-color: #17a2b8;">৳ বেতন ও মাসিক কালেকশন</button>
+    
+    <div class="nav-buttons">
+        <button id="goToAttendanceBtn" class="btn-attendance">📅 দৈনিক হাজিরা</button>
+        <button id="goToPaymentBtn" class="btn-payment">৳ মাসিক কালেকশন</button>
     </div>
 
     <div class="form-box">
@@ -105,25 +185,27 @@
             <input type="text" id="stuClass" placeholder="শ্রেণি" required>
             <input type="text" id="stuSection" placeholder="শাখা (Section)">
             <input type="number" id="stuRoll" placeholder="রোল নম্বর" required>
-            <input type="date" id="stuJoinDate" class="full-width" title="যোগদানের তারিখ" required>
+            <input type="date" id="stuJoinDate" class="full-width full-width-mobile" title="যোগদানের তারিখ" required>
         </div>
-        <button id="saveStudentBtn" class="btn-success full-width" style="width: 100%;">সংরক্ষণ করুন</button>
+        <button id="saveStudentBtn" class="btn-submit">সংরক্ষণ করুন</button>
     </div>
 
-    <h3>স্টুডেন্ট তালিকা</h3>
-    <table>
-        <thead>
-            <tr>
-                <th>রোল</th>
-                <th>নাম</th>
-                <th>শ্রেণি (শাখা)</th>
-                <th>যোগদানের তারিখ</th>
-                <th>অ্যাকশন</th>
-            </tr>
-        </thead>
-        <tbody id="studentTableBody">
-            </tbody>
-    </table>
+    <h3>স্টুডেন্ট তালিকা (ডানে-বামে স্ক্রোল করুন)</h3>
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>রোল</th>
+                    <th>নাম</th>
+                    <th>শ্রেণি (শাখা)</th>
+                    <th>যোগদান</th>
+                    <th>অ্যাকশন</th>
+                </tr>
+            </thead>
+            <tbody id="studentTableBody">
+                </tbody>
+        </table>
+    </div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
@@ -141,23 +223,19 @@
     measurementId: "G-3BXWLMX1G6"
   };
 
-  // ইনিশিয়ালাইজেশন
   firebase.initializeApp(firebaseConfig);
   const database = firebase.database();
 
-  // URL থেকে প্রজেক্টের ID এবং Name বের করা
   const urlParams = new URLSearchParams(window.location.search);
   const batchId = urlParams.get('id');
   const batchName = urlParams.get('name');
 
   if(!batchId) {
-      alert("কোনো ব্যাচ সিলেক্ট করা হয়নি!");
+      alert("কোনো ব্যাচ সিলেক্ট করা হয়নি!");
       window.location.href = "index.html";
   }
-
   document.getElementById('batchTitle').innerText = "ব্যাচ: " + batchName;
 
-  // নেভিগেশন বাটনের কাজ
   document.getElementById('goToAttendanceBtn').addEventListener('click', () => {
       window.location.href = `attendance.html?batchId=${batchId}&batchName=${encodeURIComponent(batchName)}`;
   });
@@ -165,7 +243,6 @@
       window.location.href = `payment.html?batchId=${batchId}&batchName=${encodeURIComponent(batchName)}`;
   });
 
-  // DOM Elements
   const studentTableBody = document.getElementById('studentTableBody');
   const saveStudentBtn = document.getElementById('saveStudentBtn');
   const studentIdInput = document.getElementById('studentId');
@@ -177,31 +254,27 @@
   const stuRoll = document.getElementById('stuRoll');
   const stuJoinDate = document.getElementById('stuJoinDate');
 
-  // ১. নির্দিষ্ট ব্যাচের স্টুডেন্টদের তালিকা রিয়েলটাইম লোড করা
   function loadStudents() {
     studentTableBody.innerHTML = "<tr><td colspan='5'>লোড হচ্ছে...</td></tr>";
     
     database.ref(`batches/${batchId}/students`).on("value", (snapshot) => {
         studentTableBody.innerHTML = "";
-        
         if(!snapshot.exists()){
             studentTableBody.innerHTML = "<tr><td colspan='5'>এই ব্যাচে কোনো স্টুডেন্ট নেই!</td></tr>";
             return;
         }
-
         snapshot.forEach((childSnapshot) => {
             const sId = childSnapshot.key;
             const s = childSnapshot.val();
-
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td>${s.roll}</td>
-                <td>${s.name}</td>
-                <td>${s.class} (${s.section || 'N/A'})</td>
+                <td><b>${s.name}</b></td>
+                <td>${s.class} (${s.section || '-'})</td>
                 <td>${s.joinDate}</td>
                 <td class="action-btns">
-                    <button class="btn-primary" onclick="editStudent('${sId}')">ইডিট</button>
-                    <button class="btn-danger" onclick="deleteStudent('${sId}')">ডিলিট</button>
+                    <button class="btn-edit" onclick="editStudent('${sId}')">ইডিট</button>
+                    <button class="btn-delete" onclick="deleteStudent('${sId}')">ডিলিট</button>
                 </td>
             `;
             studentTableBody.appendChild(tr);
@@ -209,7 +282,6 @@
     });
   }
 
-  // ২. নতুন স্টুডেন্ট যোগ বা আপডেট করা
   saveStudentBtn.addEventListener('click', () => {
     const name = stuName.value.trim();
     const sClass = stuClass.value.trim();
@@ -219,22 +291,17 @@
     const id = studentIdInput.value;
 
     if(!name || !sClass || !roll || !joinDate) {
-        alert("দয়া করে সবকটি ঘর পূরণ করুন!");
+        alert("দয়া করে সবকটি ঘর পূরণ করুন!");
         return;
     }
-
     const studentData = { name, class: sClass, section, roll: parseInt(roll), joinDate };
 
     if(id === "") {
-        // নতুন স্টুডেন্ট যুক্ত করা
         database.ref(`batches/${batchId}/students`).push(studentData).then(() => {
-            alert("স্টুডেন্ট সফলভাবে যোগ হয়েছে!");
             resetForm();
         });
     } else {
-        // পুরাতন তথ্য আপডেট করা
         database.ref(`batches/${batchId}/students/${id}`).set(studentData).then(() => {
-            alert("স্টুডেন্ট তথ্য আপডেট হয়েছে!");
             formTitle.innerText = "নতুন স্টুডেন্ট যোগ করুন";
             saveStudentBtn.innerText = "সংরক্ষণ করুন";
             studentIdInput.value = "";
@@ -243,7 +310,6 @@
     }
   });
 
-  // ৩. ইডিট করার জন্য তথ্য ফর্মে ফিরিয়ে আনা
   window.editStudent = function(sId) {
       database.ref(`batches/${batchId}/students/${sId}`).once("value", (snapshot) => {
           if(snapshot.exists()) {
@@ -254,19 +320,15 @@
               stuSection.value = s.section;
               stuRoll.value = s.roll;
               stuJoinDate.value = s.joinDate;
-
-              formTitle.innerText = "স্টুডেন্ট তথ্য সংশোধন (Edit)";
+              formTitle.innerText = "স্টুডেন্ট তথ্য সংশোধন";
               saveStudentBtn.innerText = "আপডেট করুন";
           }
       });
   }
 
-  // ৪. স্টুডেন্ট ডিলিট করা
   window.deleteStudent = function(sId) {
       if(confirm("আপনি কি নিশ্চিতভাবে এই স্টুডেন্টকে ডিলিট করতে চান?")) {
-          database.ref(`batches/${batchId}/students/${sId}`).remove().then(() => {
-              alert("স্টুডেন্ট প্রোফাইল ডিলিট হয়েছে।");
-          });
+          database.ref(`batches/${batchId}/students/${sId}`).remove();
       }
   }
 
@@ -274,7 +336,6 @@
       stuName.value = ""; stuClass.value = ""; stuSection.value = ""; stuRoll.value = ""; stuJoinDate.value = "";
   }
 
-  // পেজ লোড হওয়ামাত্রই রান হবে
   loadStudents();
 </script>
 </body>
