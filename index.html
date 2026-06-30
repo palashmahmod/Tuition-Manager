@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>টিউশন ম্যানেজার - ড্যাশবোর্ড</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 20px;
+            direction: ltr;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+        }
+        .form-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        .batch-list {
+            list-style: none;
+            padding: 0;
+        }
+        .batch-item {
+            background: #e9ecef;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .batch-item a {
+            text-decoration: none;
+            color: #007bff;
+            flex-grow: 1;
+        }
+        .delete-btn {
+            background-color: #dc3545;
+            padding: 5px 10px;
+            font-size: 14px;
+        }
+        .delete-btn:hover {
+            background-color: #c82333;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>আমার প্রাইভেট ব্যাচসমূহ</h2>
+    
+    <div class="form-group">
+        <input type="text" id="batchNameInput" placeholder="নতুন ব্যাচের নাম লিখুন (যেমন: Class 9)">
+        <button id="addBatchBtn">ব্যাচ তৈরি করুন</button>
+    </div>
+
+    <ul class="batch-list" id="batchList">
+        </ul>
+</div>
+
+<script type="module">
+  // ফায়ারবেস মডিউল ইমপোর্ট
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-analytics.js";
+  // ডাটাবেজের জন্য Firestore ইমপোর্ট করা হলো
+  import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
+
+  // আপনার ফায়ারবেস কনফিগারেশন
+  const firebaseConfig = {
+    apiKey: "AIzaSyAquGKYXLOF5ZbHuu5GzenXRcVF_KKm5ag",
+    authDomain: "tuition-manager-101c2.firebaseapp.com",
+    databaseURL: "https://tuition-manager-101c2-default-rtdb.firebaseio.com",
+    projectId: "tuition-manager-101c2",
+    storageBucket: "tuition-manager-101c2.firebasestorage.app",
+    messagingSenderId: "532051589045",
+    appId: "1:532051589045:web:a7670048df0f5657ea8bfc",
+    measurementId: "G-3BXWLMX1G6"
+  };
+
+  // ফায়ারবেস ইনিশিয়ালাইজ
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+  const db = getFirestore(app); // ডাটাবেজ ভেরিয়েবল
+
+  const batchNameInput = document.getElementById('batchNameInput');
+  const addBatchBtn = document.getElementById('addBatchBtn');
+  const batchList = document.getElementById('batchList');
+
+  // ১. ডাটাবেজ থেকে ব্যাচগুলোর তালিকা লোড করার ফাংশন
+  async function loadBatches() {
+    batchList.innerHTML = "লোড হচ্ছে...";
+    const querySnapshot = await getDocs(collection(db, "batches"));
+    batchList.innerHTML = ""; // আগের লেখা মুছে ফেলা
+    
+    querySnapshot.forEach((docSnap) => {
+      const batchData = docSnap.data();
+      const batchId = docSnap.id;
+
+      // প্রতিটি ব্যাচের জন্য HTML তৈরি
+      const li = document.createElement('li');
+      li.className = 'batch-item';
+      
+      // ব্যাচের নামের ওপর ক্লিক করলে batch.html পাতায় নিয়ে যাবে এবং ব্যাচের ID সাথে পাঠাবে
+      li.innerHTML = `
+        <a href="batch.html?id=${batchId}&name=${encodeURIComponent(batchData.name)}">${batchData.name}</a>
+        <button class="delete-btn" data-id="${batchId}">ডিলিট</button>
+      `;
+      batchList.appendChild(li);
+    });
+
+    // ডিলিট বোতামে ক্লিক লজিক যুক্ত করা
+    const deleteButtons = document.querySelectorAll('.delete-btn');
+    deleteButtons.forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            const id = e.target.getAttribute('data-id');
+            if(confirm("আপনি কি নিশ্চিতভাবে এই ব্যাচটি ডিলিট করতে চান?")) {
+                await deleteDoc(doc(db, "batches", id));
+                loadBatches(); // তালিকা রিফ্রেশ করা
+            }
+        });
+    });
+  }
+
+  // ২. নতুন ব্যাচ যোগ করার ফাংশন
+  addBatchBtn.addEventListener('click', async () => {
+    const batchName = batchNameInput.value.trim();
+    if (batchName === "") {
+      alert("দয়া করে ব্যাচের একটি নাম দিন!");
+      return;
+    }
+
+    try {
+      // ফায়ারবেসের 'batches' কালেকশনে নতুন ডাটা জমা করা
+      await addDoc(collection(db, "batches"), {
+        name: batchName,
+        createdAt: new Date()
+      });
+      batchNameInput.value = ""; // ইনপুট বক্স খালি করা
+      loadBatches(); // তালিকা রিফ্রেশ করা
+      alert("ব্যাচটি সফলভাবে তৈরি হয়েছে!");
+    } catch (error) {
+      console.error("Error adding document: ", error);
+    }
+  });
+
+  // পেজ লোড হওয়ামাত্রই ব্যাচের তালিকা দেখাবে
+  loadBatches();
+
+</script>
+</body>
+</html>
