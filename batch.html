@@ -87,17 +87,20 @@
     </style>
 </head>
 <body>
-
 <div class="container">
+
     <a href="index.html" class="back-btn">← মূল ড্যাশবোর্ড</a>
     <h2 id="batchTitle">ব্যাচের নাম লোড হচ্ছে...</h2>
+
     <div style="text-align: center; margin-bottom: 20px;">
-    <button id="goToAttendanceBtn" class="btn-primary" style="padding: 10px 20px; font-size: 16px; margin-right: 10px;">📅 দৈনিক হাজিরা ও রিপোর্ট</button>
-    <button id="goToPaymentBtn" class="btn-primary" style="padding: 10px 20px; font-size: 16px; background-color: #17a2b8;">৳ বেতন ও মাসিক কালেকশন</button>
-</div>
+        <button id="goToAttendanceBtn" class="btn-primary" style="padding: 10px 20px; font-size: 16px; margin-right: 10px;">📅 দৈনিক হাজিরা ও রিপোর্ট</button>
+        <button id="goToPaymentBtn" class="btn-primary" style="padding: 10px 20px; font-size: 16px; background-color: #17a2b8;">৳ বেতন ও মাসিক কালেকশন</button>
+    </div>
+
     <div class="form-box">
         <h3 id="formTitle">নতুন স্টুডেন্ট যোগ করুন</h3>
-        <input type="hidden" id="studentId"> <div class="form-grid">
+        <input type="hidden" id="studentId"> 
+        <div class="form-grid">
             <input type="text" id="stuName" placeholder="স্টুডেন্টের নাম" required>
             <input type="text" id="stuClass" placeholder="শ্রেণি" required>
             <input type="text" id="stuSection" placeholder="শাখা (Section)">
@@ -123,10 +126,10 @@
     </table>
 </div>
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
-  import { getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
 
+<script>
   const firebaseConfig = {
     apiKey: "AIzaSyAquGKYXLOF5ZbHuu5GzenXRcVF_KKm5ag",
     authDomain: "tuition-manager-101c2.firebaseapp.com",
@@ -138,10 +141,11 @@
     measurementId: "G-3BXWLMX1G6"
   };
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+  // ইনিশিয়ালাইজেশন
+  firebase.initializeApp(firebaseConfig);
+  const database = firebase.database();
 
-  // URL থেকে Batch ID এবং Name খুঁজে বের করা
+  // URL থেকে প্রজেক্টের ID এবং Name বের করা
   const urlParams = new URLSearchParams(window.location.search);
   const batchId = urlParams.get('id');
   const batchName = urlParams.get('name');
@@ -152,13 +156,15 @@
   }
 
   document.getElementById('batchTitle').innerText = "ব্যাচ: " + batchName;
-document.getElementById('goToAttendanceBtn').addEventListener('click', () => {
-    window.location.href = `attendance.html?batchId=${batchId}&batchName=${encodeURIComponent(batchName)}`;
-});
 
-document.getElementById('goToPaymentBtn').addEventListener('click', () => {
-    window.location.href = `payment.html?batchId=${batchId}&batchName=${encodeURIComponent(batchName)}`;
-});
+  // নেভিগেশন বাটনের কাজ
+  document.getElementById('goToAttendanceBtn').addEventListener('click', () => {
+      window.location.href = `attendance.html?batchId=${batchId}&batchName=${encodeURIComponent(batchName)}`;
+  });
+  document.getElementById('goToPaymentBtn').addEventListener('click', () => {
+      window.location.href = `payment.html?batchId=${batchId}&batchName=${encodeURIComponent(batchName)}`;
+  });
+
   // DOM Elements
   const studentTableBody = document.getElementById('studentTableBody');
   const saveStudentBtn = document.getElementById('saveStudentBtn');
@@ -171,44 +177,46 @@ document.getElementById('goToPaymentBtn').addEventListener('click', () => {
   const stuRoll = document.getElementById('stuRoll');
   const stuJoinDate = document.getElementById('stuJoinDate');
 
-  // ১. নির্দিষ্ট ব্যাচের স্টুডেন্টদের তালিকা লোড করা
-  async function loadStudents() {
+  // ১. নির্দিষ্ট ব্যাচের স্টুডেন্টদের তালিকা রিয়েলটাইম লোড করা
+  function loadStudents() {
     studentTableBody.innerHTML = "<tr><td colspan='5'>লোড হচ্ছে...</td></tr>";
     
-    // সাব-কালেকশন 'students' থেকে ডাটা আনা হচ্ছে
-    const querySnapshot = await getDocs(collection(db, "batches", batchId, "students"));
-    studentTableBody.innerHTML = "";
-    
-    querySnapshot.forEach((docSnap) => {
-      const s = docSnap.data();
-      const sId = docSnap.id;
+    database.ref(`batches/${batchId}/students`).on("value", (snapshot) => {
+        studentTableBody.innerHTML = "";
+        
+        if(!snapshot.exists()){
+            studentTableBody.innerHTML = "<tr><td colspan='5'>এই ব্যাচে কোনো স্টুডেন্ট নেই!</td></tr>";
+            return;
+        }
 
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${s.roll}</td>
-        <td>${s.name}</td>
-        <td>${s.class} (${s.section || 'N/A'})</td>
-        <td>${s.joinDate}</td>
-        <td class="action-btns">
-            <button class="btn-primary edit-btn" data-id="${sId}">ইডিট</button>
-            <button class="btn-danger delete-btn" data-id="${sId}">ডিলিট</button>
-        </td>
-      `;
-      studentTableBody.appendChild(tr);
+        snapshot.forEach((childSnapshot) => {
+            const sId = childSnapshot.key;
+            const s = childSnapshot.val();
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${s.roll}</td>
+                <td>${s.name}</td>
+                <td>${s.class} (${s.section || 'N/A'})</td>
+                <td>${s.joinDate}</td>
+                <td class="action-btns">
+                    <button class="btn-primary" onclick="editStudent('${sId}')">ইডিট</button>
+                    <button class="btn-danger" onclick="deleteStudent('${sId}')">ডিলিট</button>
+                </td>
+            `;
+            studentTableBody.appendChild(tr);
+        });
     });
-
-    // ইডিট ও ডিলিট বাটনে ইভেন্ট লিসেনার দেওয়া
-    addTableButtonListeners();
   }
 
-  // ২. নতুন স্টুডেন্ট যোগ বা পুরাতন স্টুডেন্ট এডিট (Save/Update) করা
-  saveStudentBtn.addEventListener('click', async () => {
+  // ২. নতুন স্টুডেন্ট যোগ বা আপডেট করা
+  saveStudentBtn.addEventListener('click', () => {
     const name = stuName.value.trim();
     const sClass = stuClass.value.trim();
     const section = stuSection.value.trim();
     const roll = stuRoll.value.trim();
     const joinDate = stuJoinDate.value;
-    const id = studentIdInput.value; // এডিট মোডে থাকলে আইডি থাকবে
+    const id = studentIdInput.value;
 
     if(!name || !sClass || !roll || !joinDate) {
         alert("দয়া করে সবকটি ঘর পূরণ করুন!");
@@ -218,64 +226,55 @@ document.getElementById('goToPaymentBtn').addEventListener('click', () => {
     const studentData = { name, class: sClass, section, roll: parseInt(roll), joinDate };
 
     if(id === "") {
-        // নতুন স্টুডেন্ট যোগ (Create)
-        await addDoc(collection(db, "batches", batchId, "students"), studentData);
-        alert("স্টুডেন্ট সফলভাবে যোগ হয়েছে!");
+        // নতুন স্টুডেন্ট যুক্ত করা
+        database.ref(`batches/${batchId}/students`).push(studentData).then(() => {
+            alert("স্টুডেন্ট সফলভাবে যোগ হয়েছে!");
+            resetForm();
+        });
     } else {
-        // পুরাতন স্টুডেন্ট আপডেট (Update)
-        await updateDoc(doc(db, "batches", batchId, "students", id), studentData);
-        alert("স্টুডেন্ট তথ্য আপডেট হয়েছে!");
-        // ফর্ম আগের জায়গায় ফিরিয়ে নেওয়া
-        formTitle.innerText = "নতুন স্টুডেন্ট যোগ করুন";
-        saveStudentBtn.innerText = "সংরক্ষণ করুন";
-        studentIdInput.value = "";
+        // পুরাতন তথ্য আপডেট করা
+        database.ref(`batches/${batchId}/students/${id}`).set(studentData).then(() => {
+            alert("স্টুডেন্ট তথ্য আপডেট হয়েছে!");
+            formTitle.innerText = "নতুন স্টুডেন্ট যোগ করুন";
+            saveStudentBtn.innerText = "সংরক্ষণ করুন";
+            studentIdInput.value = "";
+            resetForm();
+        });
     }
-
-    resetForm();
-    loadStudents();
   });
 
-  // টেবিলের বাটনগুলোর কাজ (Edit & Delete)
-  function addTableButtonListeners() {
-      // ডিলিট লজিক
-      document.querySelectorAll('.delete-btn').forEach(btn => {
-          btn.addEventListener('click', async (e) => {
-              const sId = e.target.getAttribute('data-id');
-              if(confirm("আপনি কি নিশ্চিতভাবে এই স্টুডেন্টকে ডিলিট করতে চান?")) {
-                  await deleteDoc(doc(db, "batches", batchId, "students", sId));
-                  loadStudents();
-              }
-          });
-      });
+  // ৩. ইডিট করার জন্য তথ্য ফর্মে ফিরিয়ে আনা
+  window.editStudent = function(sId) {
+      database.ref(`batches/${batchId}/students/${sId}`).once("value", (snapshot) => {
+          if(snapshot.exists()) {
+              const s = snapshot.val();
+              studentIdInput.value = sId;
+              stuName.value = s.name;
+              stuClass.value = s.class;
+              stuSection.value = s.section;
+              stuRoll.value = s.roll;
+              stuJoinDate.value = s.joinDate;
 
-      // ইডিট লজিক (ফর্ম ফিল্ডে ডাটা ফেরত আনা)
-      document.querySelectorAll('.edit-btn').forEach(btn => {
-          btn.addEventListener('click', async (e) => {
-              const sId = e.target.getAttribute('data-id');
-              const docSnap = await getDoc(doc(db, "batches", batchId, "students", sId));
-              if(docSnap.exists()) {
-                  const s = docSnap.data();
-                  
-                  // ফর্মে ডাটা বসানো
-                  studentIdInput.value = sId;
-                  stuName.value = s.name;
-                  stuClass.value = s.class;
-                  stuSection.value = s.section;
-                  stuRoll.value = s.roll;
-                  stuJoinDate.value = s.joinDate;
-
-                  formTitle.innerText = "স্টুডেন্ট তথ্য সংশোধন (Edit)";
-                  saveStudentBtn.innerText = "আপডেট করুন";
-              }
-          });
+              formTitle.innerText = "স্টুডেন্ট তথ্য সংশোধন (Edit)";
+              saveStudentBtn.innerText = "আপডেট করুন";
+          }
       });
+  }
+
+  // ৪. স্টুডেন্ট ডিলিট করা
+  window.deleteStudent = function(sId) {
+      if(confirm("আপনি কি নিশ্চিতভাবে এই স্টুডেন্টকে ডিলিট করতে চান?")) {
+          database.ref(`batches/${batchId}/students/${sId}`).remove().then(() => {
+              alert("স্টুডেন্ট প্রোফাইল ডিলিট হয়েছে।");
+          });
+      }
   }
 
   function resetForm() {
       stuName.value = ""; stuClass.value = ""; stuSection.value = ""; stuRoll.value = ""; stuJoinDate.value = "";
   }
 
-  // পেজ লোড হলে স্টুডেন্ট লিস্ট দেখাবে
+  // পেজ লোড হওয়ামাত্রই রান হবে
   loadStudents();
 </script>
 </body>
