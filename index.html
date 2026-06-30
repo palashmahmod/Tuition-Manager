@@ -92,13 +92,10 @@
         </ul>
 </div>
 
-<script type="module">
-  // ফায়ারবেস মডিউল ইমপোর্ট
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-analytics.js";
-  // ডাটাবেজের জন্য Firestore ইমপোর্ট করা হলো
-  import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
 
+<script>
   // আপনার ফায়ারবেস কনফিগারেশন
   const firebaseConfig = {
     apiKey: "AIzaSyAquGKYXLOF5ZbHuu5GzenXRcVF_KKm5ag",
@@ -111,75 +108,72 @@
     measurementId: "G-3BXWLMX1G6"
   };
 
-  // ফায়ারবেস ইনিশিয়ালাইজ
-  const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
-  const db = getFirestore(app); // ডাটাবেজ ভেরিয়েবল
+  // ফায়ারবেস ইনিশিয়ালাইজ (compat সংস্করণ)
+  firebase.initializeApp(firebaseConfig);
+  const database = firebase.database(); // রিয়েলটাইম ডাটাবেজ ভেরিয়েবল
 
   const batchNameInput = document.getElementById('batchNameInput');
   const addBatchBtn = document.getElementById('addBatchBtn');
   const batchList = document.getElementById('batchList');
 
-  // ১. ডাটাবেজ থেকে ব্যাচগুলোর তালিকা লোড করার ফাংশন
-  async function loadBatches() {
+  // ১. ডাটাবেজ থেকে ব্যাচ লিস্ট লোড করা
+  function loadBatches() {
     batchList.innerHTML = "লোড হচ্ছে...";
-    const querySnapshot = await getDocs(collection(db, "batches"));
-    batchList.innerHTML = ""; // আগের লেখা মুছে ফেলা
     
-    querySnapshot.forEach((docSnap) => {
-      const batchData = docSnap.data();
-      const batchId = docSnap.id;
+    database.ref("batches").on("value", (snapshot) => {
+        batchList.innerHTML = "";
+        if(!snapshot.exists()){
+            batchList.innerHTML = "কোনো ব্যাচ তৈরি করা হয়নি।";
+            return;
+        }
 
-      // প্রতিটি ব্যাচের জন্য HTML তৈরি
-      const li = document.createElement('li');
-      li.className = 'batch-item';
-      
-      // ব্যাচের নামের ওপর ক্লিক করলে batch.html পাতায় নিয়ে যাবে এবং ব্যাচের ID সাথে পাঠাবে
-      li.innerHTML = `
-        <a href="batch.html?id=${batchId}&name=${encodeURIComponent(batchData.name)}">${batchData.name}</a>
-        <button class="delete-btn" data-id="${batchId}">ডিলিট</button>
-      `;
-      batchList.appendChild(li);
-    });
+        snapshot.forEach((childSnapshot) => {
+            const batchId = childSnapshot.key;
+            const batchData = childSnapshot.val();
 
-    // ডিলিট বোতামে ক্লিক লজিক যুক্ত করা
-    const deleteButtons = document.querySelectorAll('.delete-btn');
-    deleteButtons.forEach(btn => {
-        btn.addEventListener('click', async (e) => {
-            const id = e.target.getAttribute('data-id');
-            if(confirm("আপনি কি নিশ্চিতভাবে এই ব্যাচটি ডিলিট করতে চান?")) {
-                await deleteDoc(doc(db, "batches", id));
-                loadBatches(); // তালিকা রিফ্রেশ করা
-            }
+            const li = document.createElement('li');
+            li.className = 'batch-item';
+            li.innerHTML = `
+                <a href="batch.html?id=${batchId}&name=${encodeURIComponent(batchData.name)}">${batchData.name}</a>
+                <button class="delete-btn" onclick="deleteBatch('${batchId}')">ডিলিট</button>
+            `;
+            batchList.appendChild(li);
         });
     });
   }
 
-  // ২. নতুন ব্যাচ যোগ করার ফাংশন
-  addBatchBtn.addEventListener('click', async () => {
+  // ২. নতুন ব্যাচ যোগ করা
+  addBatchBtn.addEventListener('click', () => {
     const batchName = batchNameInput.value.trim();
     if (batchName === "") {
       alert("দয়া করে ব্যাচের একটি নাম দিন!");
       return;
     }
 
-    try {
-      // ফায়ারবেসের 'batches' কালেকশনে নতুন ডাটা জমা করা
-      await addDoc(collection(db, "batches"), {
+    // ডাটাবেজে পুশ (Push) করা হচ্ছে
+    database.ref("batches").push({
         name: batchName,
-        createdAt: new Date()
-      });
-      batchNameInput.value = ""; // ইনপুট বক্স খালি করা
-      loadBatches(); // তালিকা রিফ্রেশ করা
-      alert("ব্যাচটি সফলভাবে তৈরি হয়েছে!");
-    } catch (error) {
-      console.error("Error adding document: ", error);
-    }
+        createdAt: new Date().toISOString()
+    }).then(() => {
+        batchNameInput.value = ""; 
+        alert("ব্যাচটি সফলভাবে তৈরি হয়েছে!");
+    }).catch((error) => {
+        console.error("Error: ", error);
+        alert("সমস্যা হয়েছে: " + error.message);
+    });
   });
 
-  // পেজ লোড হওয়ামাত্রই ব্যাচের তালিকা দেখাবে
-  loadBatches();
+  // ৩. ব্যাচ ডিলিট করার ফাংশন
+  window.deleteBatch = function(id) {
+      if(confirm("আপনি কি নিশ্চিতভাবে এই ব্যাচটি ডিলিট করতে চান?")) {
+          database.ref("batches/" + id).remove().then(() => {
+              alert("ব্যাচটি ডিলিট হয়েছে।");
+          });
+      }
+  }
 
+  // পেজ লোড হওয়ামাত্রই রান হবে
+  loadBatches();
 </script>
 </body>
 </html>
