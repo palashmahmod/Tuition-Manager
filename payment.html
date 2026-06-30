@@ -2,77 +2,198 @@
 <html lang="bn">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>বেতন ও কালেকশন রেকর্ড</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f7f6;
+        * {
+            box-sizing: border-box;
             margin: 0;
-            padding: 20px;
-            direction: ltr;
+            padding: 0;
+        }
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            min-height: 100vh;
+            padding: 15px;
+            color: #333;
         }
         .container {
-            max-width: 850px;
+            max-width: 700px;
             margin: 0 auto;
-            background: white;
+            background: #ffffff;
             padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
         }
-        h2, h3 { text-align: center; color: #333; }
         .back-btn {
-            background-color: #6c757d; color: white; padding: 8px 12px;
-            text-decoration: none; border-radius: 4px; display: inline-block; margin-bottom: 20px;
+            background-color: #6c757d;
+            color: white;
+            padding: 8px 14px;
+            text-decoration: none;
+            border-radius: 8px;
+            display: inline-block;
+            margin-bottom: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            transition: background 0.2s;
         }
+        .back-btn:hover { background-color: #5a6268; }
+
+        h2 {
+            text-align: center;
+            color: #2c3e50;
+            font-size: 20px;
+            margin-bottom: 5px;
+            font-weight: 700;
+        }
+        h3 {
+            text-align: center;
+            color: #718096;
+            font-size: 14px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        
         .filter-box {
-            background: #e9ecef; padding: 15px; border-radius: 6px;
-            display: flex; gap: 15px; justify-content: center; align-items: center; margin-bottom: 20px;
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid #edf2f7;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 25px;
         }
-        input[type="month"], input[type="date"], input[type="number"] { padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-size: 16px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { border: 1px solid #dee2e6; padding: 10px; text-align: center; }
-        th { background-color: #f1f3f5; }
+        @media (min-width: 480px) {
+            .filter-box {
+                flex-direction: row;
+                gap: 15px;
+            }
+        }
+        .filter-box label {
+            font-size: 14px;
+            color: #475569;
+        }
+        input[type="month"] {
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 2px solid #cbd5e1;
+            font-size: 15px;
+            outline: none;
+            background: #ffffff;
+            transition: border-color 0.2s;
+        }
+        input[type="month"]:focus {
+            border-color: #3498db;
+        }
+        
+        /* টেবিলের ভেতরের ইনপুট ফিল্ডের স্টাইল */
+        table input[type="date"], table input[type="number"] {
+            padding: 6px 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 13px;
+            outline: none;
+            width: 100%;
+        }
+        table input[type="date"]:focus, table input[type="number"]:focus {
+            border-color: #3498db;
+        }
+        
+        /* টেবিল ওভারফ্লো প্রোটেকশন */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            background: #ffffff;
+            margin-top: 15px;
+            -webkit-overflow-scrolling: touch;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 620px; /* মোবাইল স্ক্রিনে কলামগুলো সুরক্ষিত রাখতে মিনিমাম উইডথ */
+        }
+        th, td {
+            padding: 12px 8px;
+            font-size: 13px;
+            text-align: center;
+            border-bottom: 1px solid #edf2f7;
+        }
+        th {
+            background-color: #f1f5f9;
+            color: #475569;
+            font-weight: 600;
+        }
+        tr:last-child td { border-bottom: none; }
+        
         .total-box {
-            background-color: #d1ecf1; color: #0c5460; padding: 15px;
-            border-radius: 6px; font-size: 18px; font-weight: bold;
-            text-align: right; margin-top: 20px; border: 1px solid #bee5eb;
+            background: linear-gradient(45deg, #e0f2fe 0%, #bae6fd 100%);
+            color: #0369a1;
+            padding: 15px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            text-align: center;
+            margin-top: 25px;
+            border: 1px solid #7dd3fc;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
         }
+        .total-box span {
+            font-size: 22px;
+            color: #0284c7;
+            margin: 0 4px;
+        }
+        
         .btn-save {
-            background-color: #007bff; color: white; border: none;
-            padding: 6px 12px; border-radius: 4px; cursor: pointer;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: background 0.2s;
+            width: 100%;
+            max-width: 80px;
         }
-        .btn-save:hover { background-color: #0069d9; }
+        .btn-save:hover { background-color: #2980b9; }
     </style>
 </head>
 <body>
-<div class="container">
 
-    <a href="index.html" id="backLink" class="back-btn">← মূল ড্যাশবোর্ড</a>
+<div class="container">
+    <a href="index.html" id="backLink" class="back-btn">← ব্যাচ ম্যানেজমেন্ট</a>
     <h2 id="batchTitle">ব্যাচের নাম...</h2>
     <h3>স্টুডেন্টদের বেতন ও মাসিক কালেকশন</h3>
-
+    
     <div class="filter-box">
         <label for="paymentMonth"><b>মাস ও বছর নির্বাচন করুন:</b></label>
         <input type="month" id="paymentMonth">
     </div>
-
-    <table>
-        <thead>
-            <tr>
-                <th>রোল</th>
-                <th>স্টুডেন্টের নাম</th>
-                <th>আদায়ের তারিখ</th>
-                <th>টাকার পরিমাণ (টাকা)</th>
-                <th>অ্যাকশন</th>
-            </tr>
-        </thead>
-        <tbody id="paymentTableBody">
-            </tbody>
-    </table>
-
+    
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 10%;">রোল</th>
+                    <th style="width: 25%;">স্টুডেন্টের নাম</th>
+                    <th style="width: 25%;">আদায়ের তারিখ</th>
+                    <th style="width: 25%;">টাকার পরিমাণ</th>
+                    <th style="width: 15%;">অ্যাকশন</th>
+                </tr>
+            </thead>
+            <tbody id="paymentTableBody">
+                </tbody>
+        </table>
+    </div>
+    
     <div class="total-box">
-        এই মাসে এই ব্যাচ থেকে মোট আদায়: <span id="totalMonthlyEarnings">0</span> টাকা
+        📊 এই মাসে এই ব্যাচ থেকে মোট আদায়: <span id="totalMonthlyEarnings">0</span> টাকা
     </div>
 </div>
 
@@ -91,36 +212,30 @@
     measurementId: "G-3BXWLMX1G6"
   };
 
-  // ফায়ারবেস ইনিশিয়ালাইজেশন
   firebase.initializeApp(firebaseConfig);
   const database = firebase.database();
 
-  // URL থেকে ব্যাচের তথ্য নেওয়া
   const urlParams = new URLSearchParams(window.location.search);
   const batchId = urlParams.get('batchId');
   const batchName = urlParams.get('batchName');
-
+  
   document.getElementById('batchTitle').innerText = "ব্যাচ: " + batchName;
   document.getElementById('backLink').href = `batch.html?id=${batchId}&name=${encodeURIComponent(batchName)}`;
-
+  
   const paymentMonthInput = document.getElementById('paymentMonth');
   const paymentTableBody = document.getElementById('paymentTableBody');
   const totalMonthlyEarnings = document.getElementById('totalMonthlyEarnings');
 
-  // চলতি মাস ও বছর ডিফল্ট সেট করা (Format: YYYY-MM)
   const today = new Date();
   const currentMonthStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
   paymentMonthInput.value = currentMonthStr;
 
-  // মাস পরিবর্তন হলে ইভেন্ট
   paymentMonthInput.addEventListener('change', loadPaymentSheet);
 
-  // পেমেন্ট রেকর্ড লোড এবং টোটাল হিসাব করার ফাংশন
   function loadPaymentSheet() {
     paymentTableBody.innerHTML = "<tr><td colspan='5'>লোড হচ্ছে...</td></tr>";
-    const selectedMonth = paymentMonthInput.value; // YYYY-MM
-
-    // ১. নির্দিষ্ট ব্যাচের স্টুডেন্ট এবং পেমেন্ট নোড একবার রিড করা
+    const selectedMonth = paymentMonthInput.value;
+    
     database.ref(`batches/${batchId}`).once("value", (snapshot) => {
         paymentTableBody.innerHTML = "";
         
@@ -129,63 +244,51 @@
             totalMonthlyEarnings.innerText = "0";
             return;
         }
-
         const studentsData = snapshot.child("students").val();
         const paymentsData = snapshot.child("payments").val() || {};
-
         let totalCollected = 0;
 
-        // ২. প্রতিটি স্টুডেন্টের জন্য রো (Row) তৈরি করা
         for (const sId in studentsData) {
             const s = studentsData[sId];
-            
-            // নির্বাচিত মাস ও স্টুডেন্ট আইডির কম্বিনেশনে ইউনিক আইডি ট্র্যাকিং
             const paymentDocId = `${selectedMonth}-${sId}`;
             const record = paymentsData[paymentDocId] || { date: `${selectedMonth}-10`, amount: 0 };
-
             totalCollected += parseInt(record.amount || 0);
-
+            
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td>${s.roll}</td>
                 <td><b>${s.name}</b></td>
                 <td><input type="date" id="date_${sId}" value="${record.date}"></td>
-                <td><input type="number" id="amount_${sId}" value="${record.amount}" placeholder="টাকা" style="width:100px;"></td>
+                <td><input type="number" id="amount_${sId}" value="${record.amount}" placeholder="টাকা"></td>
                 <td><button class="btn-save" onclick="savePayment('${sId}')">সংরক্ষণ</button></td>
             `;
             paymentTableBody.appendChild(tr);
         }
-
-        // মোট কালেকশন প্রদর্শন
         totalMonthlyEarnings.innerText = totalCollected;
     });
   }
 
-  // ৩. সিঙ্গেল স্টুডেন্ট পেমেন্ট ডাটাবেজে সেভ করা
   window.savePayment = function(sId) {
       const selectedMonth = paymentMonthInput.value;
       const pDate = document.getElementById(`date_${sId}`).value;
       const pAmount = document.getElementById(`amount_${sId}`).value;
-
+      
       if(!pDate || pAmount === "" || parseInt(pAmount) < 0) {
-          alert("দয়া করে তারিখ ও টাকার পরিমাণ সঠিক দিন!");
+          alert("দয়া করে তারিখ ও টাকার পরিমাণ সঠিক দিন!");
           return;
       }
-
       const paymentDocId = `${selectedMonth}-${sId}`;
-
       database.ref(`batches/${batchId}/payments/${paymentDocId}`).set({
           date: pDate,
           amount: parseInt(pAmount)
       }).then(() => {
-          alert("বেতনের তথ্য সফলভাবে সংরক্ষিত হয়েছে!");
-          loadPaymentSheet(); // টোটাল রিকালকুলেট করার জন্য রিফ্রেশ
+          alert("বেতনের তথ্য সফলভাবে সংরক্ষিত হয়েছে!");
+          loadPaymentSheet();
       }).catch((error) => {
           alert("ত্রুটি: " + error.message);
       });
   }
 
-  // পেজ ওপেন হওয়ামাত্রই রান হবে
   loadPaymentSheet();
 </script>
 </body>
