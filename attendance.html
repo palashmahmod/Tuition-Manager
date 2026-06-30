@@ -2,73 +2,218 @@
 <html lang="bn">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>হাজিরা রেজিস্টার</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f7f6;
+        * {
+            box-sizing: border-box;
             margin: 0;
-            padding: 20px;
-            direction: ltr;
+            padding: 0;
+        }
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            min-height: 100vh;
+            padding: 15px;
+            color: #333;
         }
         .container {
-            max-width: 850px;
+            max-width: 700px;
             margin: 0 auto;
-            background: white;
+            background: #ffffff;
             padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
         }
-        h2, h3 { text-align: center; color: #333; }
         .back-btn {
-            background-color: #6c757d; color: white; padding: 8px 12px;
-            text-decoration: none; border-radius: 4px; display: inline-block; margin-bottom: 20px;
+            background-color: #6c757d;
+            color: white;
+            padding: 8px 14px;
+            text-decoration: none;
+            border-radius: 8px;
+            display: inline-block;
+            margin-bottom: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            transition: background 0.2s;
         }
+        .back-btn:hover { background-color: #5a6268; }
+
+        h2 {
+            text-align: center;
+            color: #2c3e50;
+            font-size: 20px;
+            margin-bottom: 5px;
+            font-weight: 700;
+        }
+        h3 {
+            text-align: center;
+            color: #718096;
+            font-size: 14px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        
         .date-picker-box {
-            background: #e9ecef; padding: 15px; border-radius: 6px;
-            display: flex; gap: 15px; justify-content: center; align-items: center; margin-bottom: 20px;
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid #edf2f7;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 25px;
         }
-        input[type="date"], select { padding: 10px; border-radius: 4px; border: 1px solid #ccc; font-size: 16px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { border: 1px solid #dee2e6; padding: 10px; text-align: center; }
-        th { background-color: #f1f3f5; }
-        .radio-group { display: flex; gap: 10px; justify-content: center; }
+        @media (min-width: 480px) {
+            .date-picker-box {
+                flex-direction: row;
+                gap: 15px;
+            }
+        }
+        .date-picker-box label {
+            font-size: 14px;
+            color: #475569;
+        }
+        input[type="date"] {
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 2px solid #cbd5e1;
+            font-size: 15px;
+            outline: none;
+            background: #ffffff;
+            transition: border-color 0.2s;
+        }
+        input[type="date"]:focus {
+            border-color: #3498db;
+        }
+        
+        /* টেবিল ওভারফ্লো প্রোটেকশন */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            background: #ffffff;
+            margin-top: 15px;
+            -webkit-overflow-scrolling: touch;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 600px; /* মোবাইল স্ক্রিনে টেবিল ডেটা সুন্দর রাখতে মিনিমাম উইডথ */
+        }
+        th, td {
+            padding: 12px 10px;
+            font-size: 13px;
+            text-align: center;
+            border-bottom: 1px solid #edf2f7;
+        }
+        th {
+            background-color: #f1f5f9;
+            color: #475569;
+            font-weight: 600;
+        }
+        tr:last-child td { border-bottom: none; }
+        
+        /* টাচ ফ্রেন্ডলি রেডিও বাটন গ্রুপ */
+        .radio-group {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+        .radio-group label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: #f1f5f9;
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            user-select: none;
+            transition: all 0.2s;
+            border: 1px solid #e2e8f0;
+        }
+        .radio-group input[type="radio"] {
+            transform: scale(1.1);
+            cursor: pointer;
+        }
+        /* উপস্থিত ও অনুপস্থিত কালার হাইলাইট */
+        .radio-group label:has(input[value="Present"]:checked) {
+            background: #d4edda;
+            color: #155724;
+            border-color: #c3e6cb;
+        }
+        .radio-group label:has(input[value="Absent"]:checked) {
+            background: #f8d7da;
+            color: #721c24;
+            border-color: #f5c6cb;
+        }
+        
+        .stats {
+            font-weight: 600;
+            color: #3498db;
+        }
+        
         .btn-submit {
-            display: block; width: 100%; padding: 12px; background-color: #28a745;
-            color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; margin-top: 20px;
+            display: block;
+            width: 100%;
+            padding: 14px;
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 25px;
+            box-shadow: 0 4px 6px rgba(46, 204, 113, 0.2);
+            transition: background 0.2s, transform 0.1s;
         }
-        .btn-submit:hover { background-color: #218838; }
-        .stats { font-weight: bold; color: #007bff; }
+        .btn-submit:active {
+            transform: scale(0.99);
+        }
+        .btn-submit:hover {
+            background-color: #27ae60;
+        }
     </style>
 </head>
 <body>
-<div class="container">
 
-    <a href="index.html" id="backLink" class="back-btn">← মূল ড্যাশবোর্ড</a>
+<div class="container">
+    <a href="index.html" id="backLink" class="back-btn">← ব্যাচ ম্যানেজমেন্ট</a>
     <h2 id="batchTitle">ব্যাচের নাম...</h2>
     <h3>প্রতিদিনের হাজিরা ও মাসিক রিপোর্ট</h3>
-
+    
     <div class="date-picker-box">
         <label for="attDate"><b>তারিখ নির্বাচন করুন:</b></label>
-        <input type="date" id="attDate">
-        <span id="dayName" style="font-weight: bold; color: #555;">(বার)</span>
+        <div>
+            <input type="date" id="attDate">
+            <span id="dayName" style="font-weight: 600; color: #4a5568; margin-left: 5px;">(বার)</span>
+        </div>
     </div>
-
-    <table>
-        <thead>
-            <tr>
-                <th>রোল</th>
-                <th>স্টুডেন্টের নাম</th>
-                <th>আজকের হাজিরা</th>
-                <th>এই মাসের মোট কার্যদিবস</th>
-                <th>এই মাসের মোট উপস্থিতি</th>
-            </tr>
-        </thead>
-        <tbody id="attendanceTableBody">
+    
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 10%;">রোল</th>
+                    <th style="width: 25%;">স্টুডেন্টের নাম</th>
+                    <th style="width: 35%;">আজকের হাজিরা</th>
+                    <th style="width: 15%;">চলতি মাসের কার্যদিবস</th>
+                    <th style="width: 15%;">চলতি মাসের উপস্থিতি</th>
+                </tr>
+            </thead>
+            <tbody id="attendanceTableBody">
+                <!-- ডাটা লোড হবে এখানে -->
             </tbody>
-    </table>
-    <button id="saveAttendanceBtn" class="btn-submit">আজকের হাজিরা সংরক্ষণ করুন</button>
+        </table>
+    </div>
+    
+    <button id="saveAttendanceBtn" class="btn-submit">💾 আজকের হাজিরা সংরক্ষণ করুন</button>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
@@ -86,53 +231,46 @@
     measurementId: "G-3BXWLMX1G6"
   };
 
-  // ফায়ারবেস ইনিশিয়ালাইজেশন
   firebase.initializeApp(firebaseConfig);
   const database = firebase.database();
 
-  // URL থেকে ব্যাচের তথ্য নেওয়া
   const urlParams = new URLSearchParams(window.location.search);
   const batchId = urlParams.get('batchId');
   const batchName = urlParams.get('batchName');
-
+  
   document.getElementById('batchTitle').innerText = "ব্যাচ: " + batchName;
   document.getElementById('backLink').href = `batch.html?id=${batchId}&name=${encodeURIComponent(batchName)}`;
-
+  
   const attDateInput = document.getElementById('attDate');
   const dayNameSpan = document.getElementById('dayName');
   const attendanceTableBody = document.getElementById('attendanceTableBody');
   const saveAttendanceBtn = document.getElementById('saveAttendanceBtn');
 
-  // আজকের তারিখ ডিফল্ট সেট করা
   const today = new Date();
   const year = today.getFullYear();
   const month = String(today.getMonth() + 1).padStart(2, '0');
   const day = String(today.getDate()).padStart(2, '0');
   attDateInput.value = `${year}-${month}-${day}`;
 
-  // বাংলায় বার প্রদর্শন করার ফাংশন
   function updateDayName(dateString) {
       const days = ['রবিবার', 'সোমবার', 'মঙ্গলবার', 'বুধবার', 'বৃহস্পতিবার', 'শুক্রবার', 'শনিবার'];
       const d = new Date(dateString);
       dayNameSpan.innerText = `(${days[d.getDay()]})`;
   }
-
+  
   updateDayName(attDateInput.value);
 
-  // তারিখ পরিবর্তন ইভেন্ট
   attDateInput.addEventListener('change', () => {
       updateDayName(attDateInput.value);
       loadAttendanceSheets();
   });
 
-  // স্টুডেন্ট লিস্ট এবং রিপোর্ট লোড করার মেইন ফাংশন
   function loadAttendanceSheets() {
     attendanceTableBody.innerHTML = "<tr><td colspan='5'>লোড হচ্ছে...</td></tr>";
     
-    const selectedDate = attDateInput.value; // YYYY-MM-DD
-    const selectedMonth = selectedDate.substring(0, 7); // YYYY-MM
-
-    // ১. স্টুডেন্টদের তালিকা ও উপস্থিতির রেকর্ড রিয়েলটাইম রিড করা
+    const selectedDate = attDateInput.value;
+    const selectedMonth = selectedDate.substring(0, 7);
+    
     database.ref(`batches/${batchId}`).once("value", (snapshot) => {
         attendanceTableBody.innerHTML = "";
         
@@ -140,14 +278,12 @@
             attendanceTableBody.innerHTML = "<tr><td colspan='5'>এই ব্যাচে কোনো স্টুডেন্ট নেই!</td></tr>";
             return;
         }
-
+        
         const studentsData = snapshot.child("students").val();
         const attendanceData = snapshot.child("attendance").val() || {};
-
         let todayAttendance = attendanceData[selectedDate] || {};
         let monthlyStats = {};
 
-        // ২. এই মাসের মোট কার্যদিবস ও মোট উপস্থিতির রিপোর্ট তৈরি
         for (const attDate in attendanceData) {
             if (attDate.startsWith(selectedMonth)) {
                 const dayRecord = attendanceData[attDate];
@@ -163,54 +299,73 @@
             }
         }
 
-        // ৩. টেবিল ভিউ তৈরি করা
         for (const sId in studentsData) {
             const s = studentsData[sId];
             const stats = monthlyStats[sId] || { totalDays: 0, presentDays: 0 };
             const currentStatus = todayAttendance[sId] || "Present";
-
+            
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td>${s.roll}</td>
                 <td><b>${s.name}</b></td>
                 <td>
                     <div class="radio-group">
-                        <label><input type="radio" name="status_${sId}" value="Present" ${currentStatus === "Present" ? "checked" : ""}> উপস্থিত</label>
-                        <label><input type="radio" name="status_${sId}" value="Absent" ${currentStatus === "Absent" ? "checked" : ""}> অনুপস্থিত</label>
+                        <label><input type="radio" name="status_${sId}" value="Present" ${currentStatus === "Present" ? "checked" : ""} onchange="handleRadioChange(this)"> উপস্থিত</label>
+                        <label><input type="radio" name="status_${sId}" value="Absent" ${currentStatus === "Absent" ? "checked" : ""} onchange="handleRadioChange(this)"> অনুপস্থিত</label>
                     </div>
                 </td>
                 <td class="stats">${stats.totalDays} দিন</td>
-                <td class="stats" style="color: #28a745;">${stats.presentDays} day</td>
+                <td class="stats" style="color: #2ecc71;">${stats.presentDays} দিন</td>
             `;
             attendanceTableBody.appendChild(tr);
         }
     });
   }
 
-  // ৪. ডাটাবেজে হাজিরা সংরক্ষণ
+  // রেডিও বাটনের ব্যাকগ্রাউন্ড কালার রিয়েলটাইমে পরিবর্তনের জন্য হেল্পার ফাংশন
+  window.handleRadioChange = function(radio) {
+      const group = radio.closest('.radio-group');
+      group.querySelectorAll('label').forEach(label => {
+          const input = label.querySelector('input');
+          if(input.checked) {
+              if(input.value === "Present") {
+                  label.style.background = "#d4edda";
+                  label.style.color = "#155724";
+                  label.style.borderColor = "#c3e6cb";
+              } else {
+                  label.style.background = "#f8d7da";
+                  label.style.color = "#721c24";
+                  label.style.borderColor = "#f5c6cb";
+              }
+          } else {
+              label.style.background = "#f1f5f9";
+              label.style.color = "#333";
+              label.style.borderColor = "#e2e8f0";
+          }
+      });
+  }
+
   saveAttendanceBtn.addEventListener('click', () => {
       const selectedDate = attDateInput.value;
       
       database.ref(`batches/${batchId}/students`).once("value", (snapshot) => {
           if(!snapshot.exists()) return;
-
           let attendanceData = {};
           snapshot.forEach((childSnapshot) => {
               const sId = childSnapshot.key;
               const radioInput = document.querySelector(`input[name="status_${sId}"]:checked`);
               attendanceData[sId] = radioInput ? radioInput.value : "Present";
           });
-
+          
           database.ref(`batches/${batchId}/attendance/${selectedDate}`).set(attendanceData).then(() => {
-              alert("আজকের হাজিরা সফলভাবে ডাটাবেজে সংরক্ষিত হয়েছে!");
-              loadAttendanceSheets(); // স্ক্রিন রিফ্রেশ করে নতুন ক্যালকুলেশন দেখানো
+              alert("আজকের হাজিরা সফলভাবে ডাটাবেজে সংরক্ষিত হয়েছে!");
+              loadAttendanceSheets();
           }).catch((error) => {
               alert("ত্রুটি: " + error.message);
           });
       });
   });
 
-  // পেজ ওপেন হওয়ামাত্রই রান হবে
   loadAttendanceSheets();
 </script>
 </body>
