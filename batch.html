@@ -96,7 +96,7 @@
                 grid-column: span 1 !important;
             }
         }
-        input {
+        input, select {
             width: 100%;
             padding: 10px 12px;
             border: 2px solid #cbd5e1;
@@ -106,7 +106,7 @@
             transition: border-color 0.2s;
             background: #ffffff;
         }
-        input:focus { border-color: #3498db; }
+        input:focus, select:focus { border-color: #3498db; }
         .full-width { grid-column: span 2; }
         
         button.btn-submit {
@@ -123,7 +123,6 @@
         }
         button.btn-submit:hover { background: #27ae60; }
         
-        /* টেবিল ওভারফ্লো প্রোটেকশন */
         .table-responsive {
             width: 100%;
             overflow-x: auto;
@@ -135,7 +134,7 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            min-width: 500px; /* মোবাইলের ভিতরে মিনিমাম চওড়া ধরে রাখবে স্ক্রোল করার জন্য */
+            min-width: 550px;
         }
         th, td {
             padding: 10px 8px;
@@ -164,10 +163,47 @@
         .btn-edit:hover { background-color: #e0a800; }
         .btn-delete { background-color: #dc3545; }
         .btn-delete:hover { background-color: #c82333; }
+        
+        .btn-transfer { background-color: #3f51b5; }
+        .btn-transfer:hover { background-color: #303f9f; }
+        
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 15px;
+        }
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .modal-content h3 { margin-bottom: 15px; text-align: center; }
+        .modal-btns {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .modal-btns button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn-confirm-transfer { background: #2ecc71; color: white; }
+        .btn-cancel-transfer { background: #e2e8f0; color: #4a5568; }
     </style>
 </head>
 <body>
-
 <div class="container">
     <a href="index.html" class="back-btn">← মূল ড্যাশবোর্ড</a>
     <h2 id="batchTitle">ব্যাচের নাম লোড হচ্ছে...</h2>
@@ -176,7 +212,7 @@
         <button id="goToAttendanceBtn" class="btn-attendance">📅 দৈনিক হাজিরা</button>
         <button id="goToPaymentBtn" class="btn-payment">৳ মাসিক কালেকশন</button>
     </div>
-
+    
     <div class="form-box">
         <h3 id="formTitle">নতুন স্টুডেন্ট যোগ করুন</h3>
         <input type="hidden" id="studentId"> 
@@ -189,7 +225,7 @@
         </div>
         <button id="saveStudentBtn" class="btn-submit">সংরক্ষণ করুন</button>
     </div>
-
+    
     <h3>স্টুডেন্ট তালিকা (ডানে-বামে স্ক্রোল করুন)</h3>
     <div class="table-responsive">
         <table>
@@ -202,15 +238,28 @@
                     <th>অ্যাকশন</th>
                 </tr>
             </thead>
-            <tbody id="studentTableBody">
-                </tbody>
+            <tbody id="studentTableBody"></tbody>
         </table>
+    </div>
+</div>
+
+<div class="modal-overlay" id="transferModal">
+    <div class="modal-content">
+        <h3>স্টুডেন্ট স্থানান্তর করুন</h3>
+        <p style="font-size:13px; color:#64748b; margin-bottom:10px; text-align:center;" id="transferStudentName"></p>
+        <label for="targetBatchSelect" style="font-size:13px; font-weight:600; display:block; margin-bottom:5px;">নতুন ব্যাচ সিলেক্ট করুন:</label>
+        <select id="targetBatchSelect">
+            <option value="">লোডিং হচ্ছে...</option>
+        </select>
+        <div class="modal-btns">
+            <button class="btn-confirm-transfer" id="confirmTransferBtn">স্থানান্তর কনফার্ম</button>
+            <button class="btn-cancel-transfer" id="cancelTransferBtn">বাতিল</button>
+        </div>
     </div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
-
 <script>
   const firebaseConfig = {
     apiKey: "AIzaSyAquGKYXLOF5ZbHuu5GzenXRcVF_KKm5ag",
@@ -222,27 +271,26 @@
     appId: "1:532051589045:web:a7670048df0f5657ea8bfc",
     measurementId: "G-3BXWLMX1G6"
   };
-
+  
   firebase.initializeApp(firebaseConfig);
   const database = firebase.database();
-
   const urlParams = new URLSearchParams(window.location.search);
   const batchId = urlParams.get('id');
   const batchName = urlParams.get('name');
-
+  
   if(!batchId) {
       alert("কোনো ব্যাচ সিলেক্ট করা হয়নি!");
       window.location.href = "index.html";
   }
+  
   document.getElementById('batchTitle').innerText = "ব্যাচ: " + batchName;
-
   document.getElementById('goToAttendanceBtn').addEventListener('click', () => {
       window.location.href = `attendance.html?batchId=${batchId}&batchName=${encodeURIComponent(batchName)}`;
   });
   document.getElementById('goToPaymentBtn').addEventListener('click', () => {
       window.location.href = `payment.html?batchId=${batchId}&batchName=${encodeURIComponent(batchName)}`;
   });
-
+  
   const studentTableBody = document.getElementById('studentTableBody');
   const saveStudentBtn = document.getElementById('saveStudentBtn');
   const studentIdInput = document.getElementById('studentId');
@@ -253,10 +301,15 @@
   const stuSection = document.getElementById('stuSection');
   const stuRoll = document.getElementById('stuRoll');
   const stuJoinDate = document.getElementById('stuJoinDate');
-
+  
+  const transferModal = document.getElementById('transferModal');
+  const targetBatchSelect = document.getElementById('targetBatchSelect');
+  const confirmTransferBtn = document.getElementById('confirmTransferBtn');
+  const cancelTransferBtn = document.getElementById('cancelTransferBtn');
+  let currentTransferStudentId = '';
+  
   function loadStudents() {
     studentTableBody.innerHTML = "<tr><td colspan='5'>লোড হচ্ছে...</td></tr>";
-    
     database.ref(`batches/${batchId}/students`).on("value", (snapshot) => {
         studentTableBody.innerHTML = "";
         if(!snapshot.exists()){
@@ -274,6 +327,7 @@
                 <td>${s.joinDate}</td>
                 <td class="action-btns">
                     <button class="btn-edit" onclick="editStudent('${sId}')">ইডিট</button>
+                    <button class="btn-transfer" onclick="openTransferModal('${sId}', '${s.name}')">স্থানান্তর</button>
                     <button class="btn-delete" onclick="deleteStudent('${sId}')">ডিলিট</button>
                 </td>
             `;
@@ -281,7 +335,7 @@
         });
     });
   }
-
+  
   saveStudentBtn.addEventListener('click', () => {
     const name = stuName.value.trim();
     const sClass = stuClass.value.trim();
@@ -289,13 +343,11 @@
     const roll = stuRoll.value.trim();
     const joinDate = stuJoinDate.value;
     const id = studentIdInput.value;
-
     if(!name || !sClass || !roll || !joinDate) {
         alert("দয়া করে সবকটি ঘর পূরণ করুন!");
         return;
     }
     const studentData = { name, class: sClass, section, roll: parseInt(roll), joinDate };
-
     if(id === "") {
         database.ref(`batches/${batchId}/students`).push(studentData).then(() => {
             resetForm();
@@ -309,7 +361,7 @@
         });
     }
   });
-
+  
   window.editStudent = function(sId) {
       database.ref(`batches/${batchId}/students/${sId}`).once("value", (snapshot) => {
           if(snapshot.exists()) {
@@ -325,17 +377,135 @@
           }
       });
   }
-
+  
   window.deleteStudent = function(sId) {
       if(confirm("আপনি কি নিশ্চিতভাবে এই স্টুডেন্টকে ডিলিট করতে চান?")) {
           database.ref(`batches/${batchId}/students/${sId}`).remove();
       }
   }
-
+  
+  window.openTransferModal = function(sId, sName) {
+      currentTransferStudentId = sId;
+      document.getElementById('transferStudentName').innerText = "স্টুডেন্ট: " + sName;
+      targetBatchSelect.innerHTML = "<option value=''>ব্যাচ সিলেক্ট করুন</option>";
+      
+      database.ref("batches").once("value", (snapshot) => {
+          if(snapshot.exists()) {
+              snapshot.forEach((childSnapshot) => {
+                  const bId = childSnapshot.key;
+                  const bData = childSnapshot.val();
+                  if(bId !== batchId) {
+                      const option = document.createElement('option');
+                      option.value = bId;
+                      option.innerText = bData.name;
+                      targetBatchSelect.appendChild(option);
+                  }
+              });
+              transferModal.style.display = 'flex';
+          } else {
+              alert("স্থানান্তর করার মতো অন্য কোনো ব্যাচ পাওয়া যায়নি!");
+          }
+      });
+  }
+  
+  cancelTransferBtn.addEventListener('click', () => {
+      transferModal.style.display = 'none';
+  });
+  
+  // ৩. ট্রান্সফার কনফার্মেশন লজিক (হাজিরা ও পেমেন্ট রেকর্ড সহ স্থানান্তর করার জন্য আপডেটেড লজিক)
+  confirmTransferBtn.addEventListener('click', () => {
+      const targetBatchId = targetBatchSelect.value;
+      if(!targetBatchId) {
+          alert("দয়া করে একটি টার্গেট ব্যাচ সিলেক্ট করুন!");
+          return;
+      }
+      
+      if(confirm("আপনি কি নিশ্চিতভাবে সমস্ত হাজিরা ও পেমেন্ট ডেটাসহ এই স্টুডেন্টকে স্থানান্তরিত করতে চান?")) {
+          
+          // সম্পূর্ণ পুরনো ব্যাচের ডেটা রিড করা হচ্ছে যেন হাজিরা ও পেমেন্ট খুঁজে পাওয়া যায়
+          database.ref(`batches/${batchId}`).once("value", (snapshot) => {
+              if(!snapshot.exists()) {
+                  alert("ব্যাচের ডেটা খুঁজে পাওয়া যায়নি!");
+                  return;
+              }
+              
+              const batchData = snapshot.val();
+              const studentData = batchData.students ? batchData.students[currentTransferStudentId] : null;
+              
+              if(!studentData) {
+                  alert("স্টুডেন্ট প্রোফাইল ডেটা খুঁজে পাওয়া যায়নি!");
+                  return;
+              }
+              
+              let updates = {};
+              
+              // (ক) নতুন ব্যাচে ঠিক আগের স্টুডেন্ট আইডি (Key) বজায় রেখেই প্রোফাইল কপি করা
+              updates[`batches/${targetBatchId}/students/${currentTransferStudentId}`] = studentData;
+              
+              // (খ) পুরনো ব্যাচের হাজিরা (Attendance) খুঁজে নতুন ব্যাচে পাথ তৈরি করা
+              if (batchData.attendance) {
+                  for (const dateKey in batchData.attendance) {
+                      if (batchData.attendance[dateKey] && batchData.attendance[dateKey][currentTransferStudentId]) {
+                          const attStatus = batchData.attendance[dateKey][currentTransferStudentId];
+                          updates[`batches/${targetBatchId}/attendance/${dateKey}/${currentTransferStudentId}`] = attStatus;
+                      }
+                  }
+              }
+              
+              // (গ) পুরনো ব্যাচের পেমেন্ট (Payments) খুঁজে নতুন ব্যাচে পাথ তৈরি করা
+              if (batchData.payments) {
+                  for (const paymentDocId in batchData.payments) {
+                      if (paymentDocId.endsWith(`-${currentTransferStudentId}`)) {
+                          const paymentRecord = batchData.payments[paymentDocId];
+                          updates[`batches/${targetBatchId}/payments/${paymentDocId}`] = paymentRecord;
+                      }
+                  }
+              }
+              
+              // নতুন ব্যাচে সমস্ত ডেটা একবারে রাইট (Write) করা
+              database.ref().update(updates).then(() => {
+                  
+                  // নতুন ব্যাচে ডেটা কপি হয়ে যাওয়ার পর পুরনো ব্যাচ থেকে ডেটা ডিলিট করার পাথ তৈরি
+                  let deleteUpdates = {};
+                  deleteUpdates[`batches/${batchId}/students/${currentTransferStudentId}`] = null;
+                  
+                  // পুরনো ব্যাচের হাজিরা থেকে স্টুডেন্ট রিমুভ
+                  if (batchData.attendance) {
+                      for (const dateKey in batchData.attendance) {
+                          if (batchData.attendance[dateKey] && batchData.attendance[dateKey][currentTransferStudentId]) {
+                              deleteUpdates[`batches/${batchId}/attendance/${dateKey}/${currentTransferStudentId}`] = null;
+                          }
+                      }
+                  }
+                  
+                  // পুরনো ব্যাচের পেমেন্ট থেকে স্টুডেন্ট রিমুভ
+                  if (batchData.payments) {
+                      for (const paymentDocId in batchData.payments) {
+                          if (paymentDocId.endsWith(`-${currentTransferStudentId}`)) {
+                              deleteUpdates[`batches/${batchId}/payments/${paymentDocId}`] = null;
+                          }
+                      }
+                  }
+                  
+                  // পুরনো ব্যাচ থেকে সম্পূর্ণ ডেটা ডিলিট সম্পন্ন করা
+                  database.ref().update(deleteUpdates).then(() => {
+                      alert("স্টুডেন্টকে তার বিগত সকল হাজিরা ও পেমেন্টের তথ্যসহ সফলভাবে স্থানান্তর করা হয়েছে!");
+                      transferModal.style.display = 'none';
+                      location.reload(); // পেজ রিফ্রেশ করে আপডেট দেখার জন্য
+                  });
+                  
+              }).catch((error) => {
+                  console.error("Transfer Error: ", error);
+                  alert("স্থানান্তরে সমস্যা হয়েছে: " + error.message);
+              });
+          });
+      }
+  });
+  
   function resetForm() {
       stuName.value = ""; stuClass.value = ""; stuSection.value = ""; stuRoll.value = ""; stuJoinDate.value = "";
   }
-
+  
   loadStudents();
 </script>
 </body>
