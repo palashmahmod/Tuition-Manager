@@ -27,28 +27,64 @@
             padding: 25px 20px;
             border-radius: 16px;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
-            display: none; /* শুরুতে জাভাস্ক্রিপ্ট দিয়ে চেক করার জন্য হিডেন থাকবে */
+            display: none; /* শুরুতে জাভাস্ক্রিপ্ট দিয়ে চেক করার জন্য হিডেন থাকবে */
         }
         
+        /* প্রোফাইল হেডার স্টাইল (লগইন ও ড্যাশবোর্ড উভয়ের জন্য) */
+        .header-profile {
+            display: flex;
+            align-items: flex-end;
+            gap: 15px;
+            margin-bottom: 5px;
+        }
+        .profile-pic {
+            width: 80px;
+            height: 106px; /* 3:4 ratio */
+            border: 1px solid #000;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+        .profile-info {
+            line-height: 1.4;
+            text-align: left;
+        }
+        .profile-info h2 {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 900;
+            color: #1a202c;
+            text-align: left;
+            padding-bottom: 0;
+        }
+        .profile-info p {
+            margin: 1px 0;
+            font-size: 13px;
+            font-weight: 600;
+            color: #4a5568;
+        }
+        .divider {
+            height: 1.5px;
+            background-color: #000;
+            margin: 10px 0 20px 0;
+            border: none;
+        }
+
         /* লগইন স্ক্রিন স্পেসিফিক স্টাইল */
         .login-box {
             text-align: center;
         }
-        .login-box .icon {
-            font-size: 50px;
+        
+        /* ডিভাইডারের নিচের অ্যাপ টাইটেল স্টাইল */
+        .login-app-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #2c3e50;
             margin-bottom: 15px;
-            display: inline-block;
+            text-align: center;
         }
-        .login-box h2::after {
-            display: none;
-        }
-        .login-box p {
-            color: #64748b;
-            font-size: 14px;
-            margin-bottom: 25px;
-        }
-
-        h2 {
+        
+        /* ড্যাশবোর্ড টাইটেল স্টাইল */
+        h2.dashboard-title {
             text-align: center;
             color: #2c3e50;
             font-size: 22px;
@@ -57,7 +93,7 @@
             position: relative;
             padding-bottom: 8px;
         }
-        .dashboard-view h2::after {
+        .dashboard-view h2.dashboard-title::after {
             content: '';
             position: absolute;
             bottom: 0;
@@ -72,7 +108,6 @@
         .header-area {
             margin-bottom: 20px;
         }
-
         /* নিচে মাঝ বরাবর লগআউট বাটনের স্টাইল */
         .logout-wrapper {
             display: flex;
@@ -98,7 +133,6 @@
             color: #ef4444;
             border-color: #fca5a5;
         }
-
         .form-group {
             display: flex;
             flex-direction: column;
@@ -154,7 +188,6 @@
         .btn-login:hover {
             background: #2980b9;
         }
-
         .batch-list {
             list-style: none;
             display: flex;
@@ -213,9 +246,16 @@
 <body>
 
 <div class="container login-box" id="loginContainer">
-    <span class="icon">🔒</span>
-    <h2>টিউশন ম্যানেজার</h2>
-    <p>অ্যাপ্লিকেশনটি ব্যবহার করতে সিকিউরিটি পাসওয়ার্ড দিন</p>
+    <div class="header-profile">
+        <img src="photo1.jpg" alt="Palash Mahmod" class="profile-pic">
+        <div class="profile-info">
+            <h2>Palash Mahmod</h2>
+            <p>BSC(SCIENCE), MSC(BOTANY)</p>
+            <p>Mob: 01757935522</p>
+        </div>
+    </div>
+    <hr class="divider">
+    <div class="login-app-title">টিউশন ম্যানেজার</div>
     <div class="form-group" style="margin-bottom: 15px;">
         <input type="password" id="passwordInput" placeholder="পাসওয়ার্ড লিখুন">
     </div>
@@ -223,8 +263,18 @@
 </div>
 
 <div class="container dashboard-view" id="dashboardContainer">
+    <div class="header-profile">
+        <img src="photo1.jpg" alt="Palash Mahmod" class="profile-pic">
+        <div class="profile-info">
+            <h2>Palash Mahmod</h2>
+            <p>BSC(SCIENCE), MSC(BOTANY)</p>
+            <p>Mob: 01757935522</p>
+        </div>
+    </div>
+    <hr class="divider">
+
     <div class="header-area">
-        <h2>আমার প্রাইভেট ব্যাচসমূহ</h2>
+        <h2 class="dashboard-title">প্রাইভেট ব্যাচসমূহ</h2>
     </div>
     
     <div class="form-group">
@@ -240,7 +290,6 @@
 
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
-
 <script>
   const firebaseConfig = {
     apiKey: "AIzaSyAquGKYXLOF5ZbHuu5GzenXRcVF_KKm5ag",
