@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>মাসিক সার্বিক রিপোর্ট ও কালেকশন</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            min-height: 100vh;
+            padding: 10px;
+            color: #333;
+        }
+        .container {
+            max-width: 1000px; /* কলাম বাড়ায় কন্টেইনার একটু বড় করা হয়েছে */
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+        }
+        .back-btn {
+            background-color: #6c757d;
+            color: white;
+            padding: 6px 12px;
+            text-decoration: none;
+            border-radius: 6px;
+            display: inline-block;
+            margin-bottom: 15px;
+            font-size: 12px;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+        .back-btn:hover { background-color: #5a6268; }
+        
+        h2 {
+            text-align: center;
+            color: #2c3e50;
+            font-size: 18px;
+            margin-bottom: 5px;
+            font-weight: 700;
+        }
+        h3 {
+            text-align: center;
+            color: #718096;
+            font-size: 13px;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+        
+        .filter-box {
+            background: #f8fafc;
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid #edf2f7;
+            display: flex;
+            flex-direction: row;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+        .filter-box label {
+            font-size: 13px;
+            color: #475569;
+        }
+        input[type="month"] {
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid #cbd5e1;
+            font-size: 13px;
+            outline: none;
+            background: #ffffff;
+        }
+        
+        .total-box {
+            background: linear-gradient(45deg, #e0f2fe 0%, #bae6fd 100%);
+            color: #0369a1;
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 20px;
+            border: 1px solid #7dd3fc;
+        }
+        .total-box span {
+            font-size: 18px;
+            color: #0284c7;
+            margin: 0 2px;
+        }
+        .table-title {
+            background: #475569;
+            color: white;
+            padding: 4px 10px;
+            font-size: 12px;
+            font-weight: 600;
+            border-radius: 6px 6px 0 0;
+            margin-top: 15px;
+        }
+        
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            border: 1px solid #e2e8f0;
+            border-radius: 0 0 8px 8px;
+            background: #ffffff;
+            margin-bottom: 15px;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 750px; /* নতুন কলামের কারণে মিন-উইথ বাড়ানো হয়েছে */
+        }
+        
+        th, td {
+            padding: 6px 4px;
+            font-size: 11px;
+            text-align: center;
+            border-bottom: 1px solid #edf2f7;
+        }
+        
+        th {
+            background-color: #f1f5f9;
+            color: #475569;
+            font-weight: 600;
+            line-height: 1.2; /* দুই লাইনের টেক্সট সুন্দর দেখানোর জন্য */
+        }
+        
+        /* শুধুমাত্র নির্দিষ্ট সেলের জন্য এক লাইনে টেক্সট রাখার নিয়ম */
+        td.nowrap {
+            white-space: nowrap;
+        }
+        
+        tr:last-child td { border-bottom: none; }
+        
+        tr.row-inactive {
+            background-color: #ffe5e5 !important;
+            color: #c00000;
+        }
+        tr.row-paid {
+            background-color: #e6f9ed !important;
+            color: #0e622b;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <a href="index.html" class="back-btn">← ড্যাশবোর্ড</a>
+    <h2>মাসিক সার্বিক রিপোর্ট ও কালেকশন সমারি</h2>
+    <h3>সকল ব্যাচের একত্রিত ডাটা শিট</h3>
+    
+    <div class="filter-box">
+        <label for="reportMonth"><b>মাস নির্বাচন করুন:</b></label>
+        <input type="month" id="reportMonth">
+    </div>
+    
+    <div class="total-box">
+        📊 এই মাসে সকল ব্যাচ থেকে সর্বমোট আদায়কৃত অর্থ: <span id="grandTotalEarnings">0</span> টাকা
+    </div>
+
+    <div class="table-title">📅 টেবিল ১: যাদের যোগদান ১ থেকে ১০ তারিখ</div>
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 10%;">যোগদানের তারিখ</th>
+                    <th style="width: 16%;">নাম</th>
+                    <th style="width: 16%;">শ্রেণি, রোল, শাখা</th>
+                    <th style="width: 12%;">ব্যাচের নাম</th>
+                    <th style="width: 8%;">আগের মাসের<br>উপস্থিতি</th>
+                    <th style="width: 8%;">আগের মাসের<br>কার্যদিবস</th>
+                    <th style="width: 10%;">বেতন আদায়ের তারিখ</th>
+                    <th style="width: 10%;">টাকার পরিমাণ</th>
+                    <th style="width: 10%;">মোবাইল নম্বর</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody1"></tbody>
+        </table>
+    </div>
+
+    <div class="table-title">📅 টেবিল ২: যাদের যোগদান ১১ থেকে ২০ তারিখ</div>
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 10%;">যোগদানের তারিখ</th>
+                    <th style="width: 16%;">নাম</th>
+                    <th style="width: 16%;">শ্রেণি, রোল, শাখা</th>
+                    <th style="width: 12%;">ব্যাচের নাম</th>
+                    <th style="width: 8%;">আগের মাসের<br>উপস্থিতি</th>
+                    <th style="width: 8%;">আগের মাসের<br>কার্যদিবস</th>
+                    <th style="width: 10%;">বেতন আদায়ের তারিখ</th>
+                    <th style="width: 10%;">টাকার পরিমাণ</th>
+                    <th style="width: 10%;">মোবাইল নম্বর</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody2"></tbody>
+        </table>
+    </div>
+
+    <div class="table-title">📅 টেবিল ৩: যাদের যোগদান ২১ থেকে ৩১ তারিখ</div>
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 10%;">যোগদানের তারিখ</th>
+                    <th style="width: 16%;">নাম</th>
+                    <th style="width: 16%;">শ্রেণি, রোল, শাখা</th>
+                    <th style="width: 12%;">ব্যাচের নাম</th>
+                    <th style="width: 8%;">আগের মাসের<br>উপস্থিতি</th>
+                    <th style="width: 8%;">আগের মাসের<br>কার্যদিবস</th>
+                    <th style="width: 10%;">বেতন আদায়ের তারিখ</th>
+                    <th style="width: 10%;">টাকার পরিমাণ</th>
+                    <th style="width: 10%;">মোবাইল নম্বর</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody3"></tbody>
+        </table>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyAquGKYXLOF5ZbHuu5GzenXRcVF_KKm5ag",
+    authDomain: "tuition-manager-101c2.firebaseapp.com",
+    databaseURL: "https://tuition-manager-101c2-default-rtdb.firebaseio.com",
+    projectId: "tuition-manager-101c2",
+    storageBucket: "tuition-manager-101c2.firebasestorage.app",
+    messagingSenderId: "532051589045",
+    appId: "1:532051589045:web:a7670048df0f5657ea8bfc",
+    measurementId: "G-3BXWLMX1G6"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const database = firebase.database();
+  
+  const reportMonthInput = document.getElementById('reportMonth');
+  const grandTotalEarnings = document.getElementById('grandTotalEarnings');
+  const tableBody1 = document.getElementById('tableBody1');
+  const tableBody2 = document.getElementById('tableBody2');
+  const tableBody3 = document.getElementById('tableBody3');
+  
+  const today = new Date();
+  reportMonthInput.value = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+  
+  reportMonthInput.addEventListener('change', generateMonthlyReport);
+  
+  function generateMonthlyReport() {
+      // কলাম সংখ্যা ৯ টি হওয়ায় colspan='9' করা হয়েছে
+      tableBody1.innerHTML = "<tr><td colspan='9'>লোড হচ্ছে...</td></tr>";
+      tableBody2.innerHTML = "<tr><td colspan='9'>লোড হচ্ছে...</td></tr>";
+      tableBody3.innerHTML = "<tr><td colspan='9'>লোড হচ্ছে...</td></tr>";
+      
+      const selectedMonth = reportMonthInput.value; // Format: "YYYY-MM"
+      
+      // আগের মাস বের করার লজিক
+      const dateParts = selectedMonth.split('-');
+      const year = parseInt(dateParts[0]);
+      const month = parseInt(dateParts[1]) - 1; // 0-indexed month
+      const prevDate = new Date(year, month - 1, 1);
+      const previousMonth = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, '0')}`;
+      
+      database.ref("batches").once("value", (snapshot) => {
+          tableBody1.innerHTML = "";
+          tableBody2.innerHTML = "";
+          tableBody3.innerHTML = "";
+          
+          if (!snapshot.exists()) {
+              const noDataRow = "<tr><td colspan='9'>কোনো ডাটা পাওয়া যায়নি!</td></tr>";
+              tableBody1.innerHTML = noDataRow; tableBody2.innerHTML = noDataRow; tableBody3.innerHTML = noDataRow;
+              grandTotalEarnings.innerText = "0";
+              return;
+          }
+          
+          let grandTotal = 0;
+          let hasStudents = false;
+          
+          snapshot.forEach((batchSnapshot) => {
+              const batchData = batchSnapshot.val();
+              const batchName = batchData.name || "অজানা ব্যাচ";
+              
+              if (batchData.students) {
+                  hasStudents = true;
+                  const students = batchData.students;
+                  const attendance = batchData.attendance || {};
+                  const payments = batchData.payments || {};
+                  
+                  for (const sId in students) {
+                      const s = students[sId];
+                      
+                      // ১. যোগদানের তারিখ থেকে দিন বের করা
+                      const joinDateStr = s.joinDate || "";
+                      let joinDay = 1;
+                      if (joinDateStr) {
+                          joinDay = parseInt(joinDateStr.split('-')[2]) || 1;
+                      }
+                      
+                      // ২. আগের মাসের উপস্থিতি ও কার্যদিবস গণনা করা 
+                      let prevMonthAttendanceDays = 0;
+                      let prevMonthTotalWorkingDays = 0;
+                      
+                      for (const attDate in attendance) {
+                          if (attDate.startsWith(previousMonth)) {
+                              // যদি ওই দিন স্টুডেন্টের কোনো অ্যাটেনডেন্স রেকর্ড থাকে, তবে সেটি কার্যদিবস
+                              if (attendance[attDate][sId]) {
+                                  prevMonthTotalWorkingDays++;
+                                  if (attendance[attDate][sId] === "Present") {
+                                      prevMonthAttendanceDays++;
+                                  }
+                              }
+                          }
+                      }
+                      
+                      // ৩. পেমেন্ট তথ্য সংগ্রহ (বর্তমান নির্বাচিত মাসের পেমেন্ট)
+                      const paymentDocId = `${selectedMonth}-${sId}`;
+                      const paymentRecord = payments[paymentDocId] || { date: "", amount: 0 };
+                      const paidAmount = parseInt(paymentRecord.amount || 0);
+                      grandTotal += paidAmount;
+                      
+                      // ৪. ইনঅ্যাক্টিভ/পড়া বন্ধ চেক লজিক
+                      const isInactive = s.status === "inactive";
+                      let shouldMarkInactive = false;
+                      if (isInactive && s.inactiveDate) {
+                          const inactiveMonthStr = s.inactiveDate.substring(0, 7);
+                          if (selectedMonth >= inactiveMonthStr) {
+                              shouldMarkInactive = true;
+                          }
+                      }
+                      
+                      // ৫. রো বা সারির ক্লাস নির্ধারণ
+                      let rowClass = "";
+                      if (shouldMarkInactive) {
+                          rowClass = "row-inactive";
+                      } else if (paidAmount > 0) {
+                          rowClass = "row-paid";
+                      }
+                      
+                      // নাম প্রদর্শন ফরম্যাট
+                      const nameDisplay = shouldMarkInactive 
+                          ? `<b>${s.name}</b> <span style="color:#dc3545; font-size:10px;">(বন্ধ)</span>` 
+                          : `<b>${s.name}</b>`;
+                          
+                      // মোবাইল নম্বর (ডাটাবেজে phone অথবা mobile যে নামেই থাকুক)
+                      const mobileNo = s.phone || s.mobile || "-";
+                      
+                      // ৬. এইচটিএমএল রো তৈরি
+                      const tr = document.createElement('tr');
+                      if (rowClass) tr.className = rowClass;
+                      
+                      tr.innerHTML = `
+                          <td class="nowrap">${joinDateStr || "-"}</td>
+                          <td style="text-align: left; padding-left: 8px;">${nameDisplay}</td>
+                          <td>${s.class || "-"}, ${s.roll || "-"}, ${s.section || "-"}</td>
+                          <td>${batchName}</td>
+                          <td><b>${prevMonthAttendanceDays} দিন</b></td>
+                          <td><b>${prevMonthTotalWorkingDays} দিন</b></td>
+                          <td class="nowrap">${paymentRecord.date || "-"}</td>
+                          <td><b>${paidAmount > 0 ? paidAmount + ' ৳' : '-'}</b></td>
+                          <td class="nowrap">${mobileNo}</td>
+                      `;
+                      
+                      // ৭. তারিখ অনুযায়ী নির্দিষ্ট টেবিলে পুশ করা
+                      if (joinDay >= 1 && joinDay <= 10) {
+                          tableBody1.appendChild(tr);
+                      } else if (joinDay >= 11 && joinDay <= 20) {
+                          tableBody2.appendChild(tr);
+                      } else if (joinDay >= 21 && joinDay <= 31) {
+                          tableBody3.appendChild(tr);
+                      }
+                  }
+              }
+          });
+          
+          // যদি কোনো টেবিলে ডাটা না থাকে তবে "ফাঁকা" মেসেজ দেখানো
+          if (tableBody1.children.length === 0) tableBody1.innerHTML = "<tr><td colspan='9' style='color:#94a3b8;'>এই তালিকায় কোনো স্টুডেন্ট নেই</td></tr>";
+          if (tableBody2.children.length === 0) tableBody2.innerHTML = "<tr><td colspan='9' style='color:#94a3b8;'>এই তালিকায় কোনো স্টুডেন্ট নেই</td></tr>";
+          if (tableBody3.children.length === 0) tableBody3.innerHTML = "<tr><td colspan='9' style='color:#94a3b8;'>এই তালিকায় কোনো স্টুডেন্ট নেই</td></tr>";
+          
+          if (!hasStudents) {
+              const noDataRow = "<tr><td colspan='9'>কোনো স্টুডেন্ট পাওয়া যায়নি!</td></tr>";
+              tableBody1.innerHTML = noDataRow; tableBody2.innerHTML = noDataRow; tableBody3.innerHTML = noDataRow;
+          }
+          
+          grandTotalEarnings.innerText = grandTotal;
+      });
+  }
+  
+  // পেজ লোড হওয়ার সাথে সাথে প্রথমবার ডাটা জেনারেট করা
+  generateMonthlyReport();
+</script>
+</body>
+</html>
