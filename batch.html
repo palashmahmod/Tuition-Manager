@@ -48,7 +48,7 @@
         }
         h3 {
             color: #2c3e50;
-            font-size: 16px;
+            font-size: 15px;
             margin-bottom: 12px;
             font-weight: 600;
         }
@@ -75,87 +75,91 @@
         .btn-payment { background: #17a2b8; }
         .btn-payment:hover { background: #138496; }
         
+        /* নতুন স্টুডেন্ট যোগ করার বক্সের উন্নত স্টাইল */
         .form-box {
             background: #f8fafc;
-            padding: 15px;
+            padding: 12px;
             border: 1px solid #edf2f7;
             border-radius: 12px;
             margin-bottom: 25px;
         }
         .form-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 12px;
-        }
-        @media (max-width: 480px) {
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
-            .full-width-mobile {
-                grid-column: span 1 !important;
-            }
+            grid-template-columns: 1fr; /* বামে ডানে না বসে উপর নিচ বসবে */
+            gap: 8px; /* গ্যাপ কমানো হয়েছে */
+            margin-bottom: 10px;
         }
         input, select {
             width: 100%;
-            padding: 10px 12px;
-            border: 2px solid #cbd5e1;
-            border-radius: 8px;
-            font-size: 14px;
+            padding: 7px 10px; /* প্যাডিং ছোট করা হয়েছে */
+            border: 1.5px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 13px; /* টেক্সট সাইজ ছোট করা হয়েছে */
             outline: none;
             transition: border-color 0.2s;
             background: #ffffff;
         }
         input:focus, select:focus { border-color: #3498db; }
-        .full-width { grid-column: span 2; }
         
         button.btn-submit {
             width: 100%;
-            padding: 12px;
+            padding: 9px; /* সাইজ ছোট করা হয়েছে */
             color: white;
             background: #2ecc71;
             border: none;
-            border-radius: 8px;
+            border-radius: 6px;
             cursor: pointer;
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 600;
             box-shadow: 0 4px 6px rgba(46, 204, 113, 0.15);
         }
         button.btn-submit:hover { background: #27ae60; }
         
+        /* আকর্ষণীয় ও স্মুথ টেবিল ডিজাইন */
         .table-responsive {
             width: 100%;
             overflow-x: auto;
             border: 1px solid #e2e8f0;
             border-radius: 10px;
             background: #ffffff;
-            -webkit-overflow-scrolling: touch;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+            -webkit-overflow-scrolling: touch; /* iOS-এ স্মুথ স্ক্রোলিং */
+            scrollbar-width: thin; /* মডার্ন ব্রাউজারে সুন্দর স্ক্রোলবার */
         }
         table {
             width: 100%;
             border-collapse: collapse;
-            min-width: 550px;
+            min-width: 650px; 
         }
         th, td {
-            padding: 10px 8px;
-            font-size: 13px;
+            padding: 6px 6px; /* রো ও কলামের সাইজ ছোট করা হয়েছে */
+            font-size: 12px; /* টেক্সট সাইজ ছোট করা হয়েছে */
             text-align: center;
             border-bottom: 1px solid #edf2f7;
+            white-space: nowrap; /* টেক্সট যেন ভেঙে নিচে না যায় */
         }
         th {
-            background-color: #f1f5f9;
+            background-color: #f8fafc;
             color: #475569;
-            font-weight: 600;
+            font-weight: 700;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        tr:hover {
+            background-color: #fdfdfd; /* হোভার ইফেক্ট */
         }
         tr:last-child td { border-bottom: none; }
         
+        tr.student-inactive {
+            background-color: #ffe5e5 !important;
+            color: #b30000;
+        }
         .action-btns button {
-            padding: 5px 10px;
+            padding: 4px 8px; /* বাটনের সাইজ ছোট করা হয়েছে */
             font-size: 11px;
             font-weight: 600;
-            margin: 2px;
+            margin: 1px;
             border: none;
-            border-radius: 6px;
+            border-radius: 4px;
             cursor: pointer;
             color: white;
         }
@@ -163,9 +167,13 @@
         .btn-edit:hover { background-color: #e0a800; }
         .btn-delete { background-color: #dc3545; }
         .btn-delete:hover { background-color: #c82333; }
-        
         .btn-transfer { background-color: #3f51b5; }
         .btn-transfer:hover { background-color: #303f9f; }
+        
+        .btn-status-toggle { background-color: #e2e8f0; color: #4a5568 !important; }
+        .btn-status-toggle:hover { background-color: #cbd5e1; }
+        .btn-status-toggle.inactive-btn { background-color: #2ecc71; color: white !important; }
+        .btn-status-toggle.inactive-btn:hover { background-color: #27ae60; }
         
         .modal-overlay {
             display: none;
@@ -221,7 +229,8 @@
             <input type="text" id="stuClass" placeholder="শ্রেণি" required>
             <input type="text" id="stuSection" placeholder="শাখা (Section)">
             <input type="number" id="stuRoll" placeholder="রোল নম্বর" required>
-            <input type="date" id="stuJoinDate" class="full-width full-width-mobile" title="যোগদানের তারিখ" required>
+            <input type="date" id="stuJoinDate" title="যোগদানের তারিখ" required>
+            <input type="text" id="stuPhone" placeholder="মোবাইল নম্বর (ঐচ্ছিক)">
         </div>
         <button id="saveStudentBtn" class="btn-submit">সংরক্ষণ করুন</button>
     </div>
@@ -235,6 +244,7 @@
                     <th>নাম</th>
                     <th>শ্রেণি (শাখা)</th>
                     <th>যোগদান</th>
+                    <th>মোবাইল নম্বর</th> 
                     <th>অ্যাকশন</th>
                 </tr>
             </thead>
@@ -301,6 +311,7 @@
   const stuSection = document.getElementById('stuSection');
   const stuRoll = document.getElementById('stuRoll');
   const stuJoinDate = document.getElementById('stuJoinDate');
+  const stuPhone = document.getElementById('stuPhone');
   
   const transferModal = document.getElementById('transferModal');
   const targetBatchSelect = document.getElementById('targetBatchSelect');
@@ -309,25 +320,35 @@
   let currentTransferStudentId = '';
   
   function loadStudents() {
-    studentTableBody.innerHTML = "<tr><td colspan='5'>লোড হচ্ছে...</td></tr>";
+    studentTableBody.innerHTML = "<tr><td colspan='6'>লোড হচ্ছে...</td></tr>";
     database.ref(`batches/${batchId}/students`).on("value", (snapshot) => {
         studentTableBody.innerHTML = "";
         if(!snapshot.exists()){
-            studentTableBody.innerHTML = "<tr><td colspan='5'>এই ব্যাচে কোনো স্টুডেন্ট নেই!</td></tr>";
+            studentTableBody.innerHTML = "<tr><td colspan='6'>এই ব্যাচে কোনো স্টুডেন্ট নেই!</td></tr>";
             return;
         }
         snapshot.forEach((childSnapshot) => {
             const sId = childSnapshot.key;
             const s = childSnapshot.val();
+            
+            const isActive = s.status !== "inactive";
+            const rowClass = isActive ? "" : "student-inactive";
+            const statusBtnText = isActive ? "🛑 বন্ধ" : "✅ চালু";
+            const nameDisplay = isActive ? `<b>${s.name}</b>` : `<b>${s.name}</b> <small style="color:#dc3545;">(বন্ধ)</small>`;
+            const phoneDisplay = s.phone ? s.phone : "-";
+            
             const tr = document.createElement('tr');
+            tr.className = rowClass;
             tr.innerHTML = `
                 <td>${s.roll}</td>
-                <td><b>${s.name}</b></td>
+                <td>${nameDisplay}</td>
                 <td>${s.class} (${s.section || '-'})</td>
                 <td>${s.joinDate}</td>
+                <td>${phoneDisplay}</td> 
                 <td class="action-btns">
                     <button class="btn-edit" onclick="editStudent('${sId}')">ইডিট</button>
                     <button class="btn-transfer" onclick="openTransferModal('${sId}', '${s.name}')">স্থানান্তর</button>
+                    <button class="btn-status-toggle ${isActive ? '' : 'inactive-btn'}" onclick="toggleStudentStatus('${sId}', '${s.status || 'active'}')">${statusBtnText}</button>
                     <button class="btn-delete" onclick="deleteStudent('${sId}')">ডিলিট</button>
                 </td>
             `;
@@ -336,28 +357,64 @@
     });
   }
   
+  window.toggleStudentStatus = function(sId, currentStatus) {
+      const newStatus = currentStatus === "inactive" ? "active" : "inactive";
+      const today = new Date().toISOString().split('T')[0];
+      
+      const msg = newStatus === "inactive" 
+          ? "আপনি কি নিশ্চিতভাবে এই শিক্ষার্থীর পড়া বন্ধ করতে চান? (আজকের তারিখ থেকে তার হাজিরা ও বেতন বন্ধ হয়ে যাবে)" 
+          : "আপনি কি নিশ্চিতভাবে এই শিক্ষার্থীকে পুনরায় চালু করতে চান?";
+          
+      if(confirm(msg)) {
+          const updates = {};
+          updates[`batches/${batchId}/students/${sId}/status`] = newStatus;
+          updates[`batches/${batchId}/students/${sId}/inactiveDate`] = newStatus === "inactive" ? today : null;
+          
+          database.ref().update(updates).then(() => {
+              alert("শিক্ষার্থীর অবস্থা সফলভাবে পরিবর্তন করা হয়েছে!");
+          }).catch(err => alert("ত্রুটি: " + err.message));
+      }
+  }
+  
   saveStudentBtn.addEventListener('click', () => {
     const name = stuName.value.trim();
     const sClass = stuClass.value.trim();
     const section = stuSection.value.trim();
     const roll = stuRoll.value.trim();
     const joinDate = stuJoinDate.value;
+    const phone = stuPhone.value.trim();
     const id = studentIdInput.value;
+    
     if(!name || !sClass || !roll || !joinDate) {
         alert("দয়া করে সবকটি ঘর পূরণ করুন!");
         return;
     }
-    const studentData = { name, class: sClass, section, roll: parseInt(roll), joinDate };
+    
     if(id === "") {
+        const studentData = { name, class: sClass, section, roll: parseInt(roll), joinDate, phone: phone || null, status: "active" };
         database.ref(`batches/${batchId}/students`).push(studentData).then(() => {
             resetForm();
         });
     } else {
-        database.ref(`batches/${batchId}/students/${id}`).set(studentData).then(() => {
-            formTitle.innerText = "নতুন স্টুডেন্ট যোগ করুন";
-            saveStudentBtn.innerText = "সংরক্ষণ করুন";
-            studentIdInput.value = "";
-            resetForm();
+        database.ref(`batches/${batchId}/students/${id}`).once("value", (snapshot) => {
+            const currentData = snapshot.val() || {};
+            const studentData = { 
+                name, 
+                class: sClass, 
+                section, 
+                roll: parseInt(roll), 
+                joinDate,
+                phone: phone || null,
+                status: currentData.status || "active",
+                inactiveDate: currentData.inactiveDate || null
+            };
+            
+            database.ref(`batches/${batchId}/students/${id}`).set(studentData).then(() => {
+                formTitle.innerText = "নতুন স্টুডেন্ট যোগ করুন";
+                saveStudentBtn.innerText = "সংরক্ষণ করুন";
+                studentIdInput.value = "";
+                resetForm();
+            });
         });
     }
   });
@@ -372,6 +429,7 @@
               stuSection.value = s.section;
               stuRoll.value = s.roll;
               stuJoinDate.value = s.joinDate;
+              stuPhone.value = s.phone || "";
               formTitle.innerText = "স্টুডেন্ট তথ্য সংশোধন";
               saveStudentBtn.innerText = "আপডেট করুন";
           }
@@ -412,7 +470,6 @@
       transferModal.style.display = 'none';
   });
   
-  // ৩. ট্রান্সফার কনফার্মেশন লজিক (হাজিরা ও পেমেন্ট রেকর্ড সহ স্থানান্তর করার জন্য আপডেটেড লজিক)
   confirmTransferBtn.addEventListener('click', () => {
       const targetBatchId = targetBatchSelect.value;
       if(!targetBatchId) {
@@ -421,8 +478,6 @@
       }
       
       if(confirm("আপনি কি নিশ্চিতভাবে সমস্ত হাজিরা ও পেমেন্ট ডেটাসহ এই স্টুডেন্টকে স্থানান্তরিত করতে চান?")) {
-          
-          // সম্পূর্ণ পুরনো ব্যাচের ডেটা রিড করা হচ্ছে যেন হাজিরা ও পেমেন্ট খুঁজে পাওয়া যায়
           database.ref(`batches/${batchId}`).once("value", (snapshot) => {
               if(!snapshot.exists()) {
                   alert("ব্যাচের ডেটা খুঁজে পাওয়া যায়নি!");
@@ -438,11 +493,8 @@
               }
               
               let updates = {};
-              
-              // (ক) নতুন ব্যাচে ঠিক আগের স্টুডেন্ট আইডি (Key) বজায় রেখেই প্রোফাইল কপি করা
               updates[`batches/${targetBatchId}/students/${currentTransferStudentId}`] = studentData;
               
-              // (খ) পুরনো ব্যাচের হাজিরা (Attendance) খুঁজে নতুন ব্যাচে পাথ তৈরি করা
               if (batchData.attendance) {
                   for (const dateKey in batchData.attendance) {
                       if (batchData.attendance[dateKey] && batchData.attendance[dateKey][currentTransferStudentId]) {
@@ -452,7 +504,6 @@
                   }
               }
               
-              // (গ) পুরনো ব্যাচের পেমেন্ট (Payments) খুঁজে নতুন ব্যাচে পাথ তৈরি করা
               if (batchData.payments) {
                   for (const paymentDocId in batchData.payments) {
                       if (paymentDocId.endsWith(`-${currentTransferStudentId}`)) {
@@ -462,14 +513,10 @@
                   }
               }
               
-              // নতুন ব্যাচে সমস্ত ডেটা একবারে রাইট (Write) করা
               database.ref().update(updates).then(() => {
-                  
-                  // নতুন ব্যাচে ডেটা কপি হয়ে যাওয়ার পর পুরনো ব্যাচ থেকে ডেটা ডিলিট করার পাথ তৈরি
                   let deleteUpdates = {};
                   deleteUpdates[`batches/${batchId}/students/${currentTransferStudentId}`] = null;
                   
-                  // পুরনো ব্যাচের হাজিরা থেকে স্টুডেন্ট রিমুভ
                   if (batchData.attendance) {
                       for (const dateKey in batchData.attendance) {
                           if (batchData.attendance[dateKey] && batchData.attendance[dateKey][currentTransferStudentId]) {
@@ -478,7 +525,6 @@
                       }
                   }
                   
-                  // পুরনো ব্যাচের পেমেন্ট থেকে স্টুডেন্ট রিমুভ
                   if (batchData.payments) {
                       for (const paymentDocId in batchData.payments) {
                           if (paymentDocId.endsWith(`-${currentTransferStudentId}`)) {
@@ -487,11 +533,10 @@
                       }
                   }
                   
-                  // পুরনো ব্যাচ থেকে সম্পূর্ণ ডেটা ডিলিট সম্পন্ন করা
                   database.ref().update(deleteUpdates).then(() => {
-                      alert("স্টুডেন্টকে তার বিগত সকল হাজিরা ও পেমেন্টের তথ্যসহ সফলভাবে স্থানান্তর করা হয়েছে!");
+                      alert("স্টুডেন্টকে তার বিগত সকল হাজিরা ও পেমেন্টের তথ্যসহ সফলভাবে স্থানান্তর করা হয়েছে!");
                       transferModal.style.display = 'none';
-                      location.reload(); // পেজ রিফ্রেশ করে আপডেট দেখার জন্য
+                      location.reload();
                   });
                   
               }).catch((error) => {
@@ -503,7 +548,7 @@
   });
   
   function resetForm() {
-      stuName.value = ""; stuClass.value = ""; stuSection.value = ""; stuRoll.value = ""; stuJoinDate.value = "";
+      stuName.value = ""; stuClass.value = ""; stuSection.value = ""; stuRoll.value = ""; stuJoinDate.value = ""; stuPhone.value = "";
   }
   
   loadStudents();
